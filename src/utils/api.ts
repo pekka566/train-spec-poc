@@ -1,0 +1,88 @@
+import type { TrainResponse, TrainRecord, TrainStatus, TimeTableRow } from "@/types/train";
+import { TRAINS } from "@/types/train";
+
+const API_BASE = "https://rata.digitraffic.fi/api/v1";
+
+/**
+ * Fetch train data from Digitraffic API
+ * Returns the train data or null if not found
+ * Throws on network errors or non-OK HTTP status
+ */
+export async function fetchTrain(
+  date: string,
+  trainNumber: number
+): Promise<TrainResponse | null> {
+  const url = `${API_BASE}/trains/${date}/${trainNumber}`;
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null;
+    }
+    throw new Error(`API error: ${response.status} ${response.statusText}`);
+  }
+
+  const data: unknown = await response.json();
+
+  if (!Array.isArray(data) || data.length === 0) {
+    return null;
+  }
+
+  return data[0] as TrainResponse;
+}
+
+/**
+ * Get station codes for a train number
+ */
+function getStationCodes(trainNumber: number): { from: string; to: string } {
+  if (trainNumber === TRAINS.morning.number) {
+    return { from: TRAINS.morning.from, to: TRAINS.morning.to };
+  }
+  return { from: TRAINS.evening.from, to: TRAINS.evening.to };
+}
+
+/**
+ * Determine train status based on delay and cancelled flag
+ */
+function getTrainStatus(cancelled: boolean, delayMinutes: number): TrainStatus {
+  if (cancelled) return "CANCELLED";
+  if (delayMinutes <= 0) return "ON_TIME";
+  if (delayMinutes <= 5) return "SLIGHT_DELAY";
+  return "DELAYED";
+}
+
+/**
+ * Parse Digitraffic API response to TrainRecord
+ */
+export function parseTrainResponse(response: TrainResponse): TrainRecord | null {
+  const { from, to } = getStationCodes(response.trainNumber);
+
+  // Find departure and arrival rows
+  const departureRow = response.timeTableRows.find(
+    (row: TimeTableRow) => row.type === "DEPARTURE" && row.stationShortCode === from
+  );
+  const arrivalRow = response.timeTableRows.find(
+    (row: TimeTableRow) => row.type === "ARRIVAL" && row.stationShortCode === to
+  );
+
+  if (!departureRow || !arrivalRow) {
+    return null;
+  }
+
+  const cancelled = response.cancelled || departureRow.cancelled;
+  const delayMinutes = cancelled ? 0 : (departureRow.differenceInMinutes ?? 0);
+  const status = getTrainStatus(cancelled, delayMinutes);
+
+  return {
+    date: response.departureDate,
+    trainNumber: response.trainNumber,
+    trainType: response.trainType,
+    cancelled,
+    scheduledDeparture: departureRow.scheduledTime,
+    actualDeparture: cancelled ? null : (departureRow.actualTime ?? null),
+    scheduledArrival: arrivalRow.scheduledTime,
+    actualArrival: cancelled ? null : (arrivalRow.actualTime ?? null),
+    delayMinutes,
+    status,
+  };
+}

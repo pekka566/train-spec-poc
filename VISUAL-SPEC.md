@@ -298,6 +298,8 @@ Use these theme tokens consistently for status and train cards:
 | Morning card | Orange to amber (e.g. `orange.5` → `yellow.6`) |
 | Evening card | Indigo to purple (e.g. `indigo.5` → `violet.5`) |
 
+**Implementation (CSS variables):** Mantine exposes colors as CSS variables with a **hyphen** between color name and shade. In code, use `var(--mantine-color-{name}-{shade})`, e.g. `var(--mantine-color-green-5)`, `var(--mantine-color-yellow-5)`, `var(--mantine-color-red-5)`, `var(--mantine-color-gray-6)`. Using a dot (e.g. `green.5`) in the variable name will not resolve and cells will render without background color.
+
 ---
 
 ## Reference
