@@ -18,7 +18,8 @@ As a daily commuter traveling between Lempäälä and Tampere, I want to track t
 
 - User can select a start date and end date for the analysis period.
 - **Default range on first load:** Pre-fill with the last 14 **calendar** days (e.g. if today is 2026-01-30, default start = 2026-01-16, end = 2026-01-30). Only weekdays within that range are then used for fetching and statistics.
-- **Maximum allowed range:** 30 calendar days (to limit API calls).
+- **API call limit:** The app does not limit the date range by calendar days. Instead, before fetching, it **calculates how many API calls would be needed** for the selected range: for each weekday in the range (end not in future) and each train (1719, 9700), count 1 if that (date, trainNumber) is **not** satisfied from local storage (and always count 1 for today for each train). If this **needed API calls** count is **more than 30**, the app shows an error and **does not fetch**. If it is **30 or less**, the app fetches only the (date, trainNumber) pairs that actually need an API call (today or missing from storage).
+- **Allowed range:** Any start/end with end not in future; the effective limit is that **needed API calls ≤ 30** (so a large range may be allowed if most data is already in local storage).
 - **Weekdays only:** Only Monday–Friday are included in the analysis; weekend dates in the range are ignored.
 - End date cannot be in the future.
 
@@ -64,7 +65,8 @@ A table showing all data points with columns:
 
 ### 5. Data Fetching
 
-- Fetch data for each date in the range by calling the API with the specific train number.
+- When the user clicks "Fetch", first compute **needed API calls** from the selected date range and current local storage (as in section 1): for each weekday in range (end not in future) and each train, count 1 if that (date, trainNumber) is not in storage or is today. If **needed API calls > 30**, show an error message and **do not perform any API requests**. If **needed API calls ≤ 30**, proceed to fetch only for (date, trainNumber) that require an API call (today or not in storage).
+- Fetch data for each (date, trainNumber) that needs it by calling the API with the specific train number.
 - Show a loading indicator during fetch.
 - Handle errors gracefully (network errors, missing data).
 - For dates where no data is returned, skip silently (train may not run on that date).
@@ -140,7 +142,7 @@ const TRAINS = {
 
 ## Acceptance Criteria
 
-1. **Date selection works correctly**: Selecting a date range and clicking "Fetch" retrieves data for weekdays only within that range.
+1. **Date selection works correctly**: Selecting a date range and clicking "Fetch" retrieves data for weekdays only within that range. The allowed range is constrained by the "needed API calls ≤ 30" rule (not by a fixed number of calendar days).
 
 2. **API integration is correct**: The app calls the Digitraffic API with the correct train numbers (1719, 9700) and correctly parses the departure times from the appropriate `timeTableRows` entries.
 
@@ -154,7 +156,9 @@ const TRAINS = {
 
 7. **Times are displayed in Finnish timezone**: All times shown to the user should be in local Finnish time, not UTC.
 
-8. **Local storage caching**: Fetched data for past dates is stored in browser local storage and reused when the same date and train is requested again (no API call). Data for the current date is never stored; the API is always called for today’s trains.
+8. **Local storage caching**: Fetched data for past dates is stored in browser local storage and reused when the same date and train is requested again (no API call). Data for the current date is never stored; the API is always called for today's trains.
+
+9. **API call limit**: When the user selects a date range and clicks "Fetch", the app computes the number of needed API calls (using data in local storage). If that number is greater than 30, an error is shown and no API calls are made. If it is 30 or less, data is fetched only for the (date, trainNumber) pairs that are not in storage or are today.
 
 ## Out of scope (for initial version)
 
