@@ -2,6 +2,7 @@ import { Card, Text, Group, Stack, Box, Tooltip } from "@mantine/core";
 import type { TrainRecord, TrainConfig } from "@/types/train";
 import { formatFinnishDate } from "@/utils/dateUtils";
 import { sortByDate } from "@/utils/statsCalculator";
+import { StatusLegend, STATUS_LEGEND_ITEMS } from "./StatusLegend";
 
 interface TimelineProps {
   train: TrainConfig;
@@ -27,7 +28,7 @@ function getTooltipContent(record: TrainRecord): string {
   if (record.cancelled) {
     return `${dateStr}: Cancelled`;
   }
-  if (record.delayMinutes <= 0) {
+  if (record.status === "ON_TIME") {
     return `${dateStr}: On time`;
   }
   return `${dateStr}: +${record.delayMinutes} min delay`;
@@ -51,7 +52,11 @@ export function Timeline({ train, records }: TimelineProps) {
         ) : (
           <Group gap="xs" wrap="wrap">
             {sortedRecords.map((record) => (
-              <Tooltip key={record.date} label={getTooltipContent(record)} withArrow>
+              <Tooltip
+                key={record.date}
+                label={getTooltipContent(record)}
+                withArrow
+              >
                 <Box
                   w={44}
                   h={44}
@@ -77,31 +82,8 @@ export function Timeline({ train, records }: TimelineProps) {
           </Group>
         )}
 
-        <Group gap="md" mt="xs">
-          <LegendItem color="green-5" label="On time" />
-          <LegendItem color="yellow-5" label="1-5 min" />
-          <LegendItem color="red-5" label=">5 min" />
-          <LegendItem color="gray-6" label="Cancelled" />
-        </Group>
+        <StatusLegend items={STATUS_LEGEND_ITEMS} />
       </Stack>
     </Card>
-  );
-}
-
-function LegendItem({ color, label }: { color: string; label: string }) {
-  return (
-    <Group gap={4}>
-      <Box
-        w={12}
-        h={12}
-        style={{
-          backgroundColor: `var(--mantine-color-${color})`,
-          borderRadius: "var(--mantine-radius-xs)",
-        }}
-      />
-      <Text size="xs" c="dimmed">
-        {label}
-      </Text>
-    </Group>
   );
 }

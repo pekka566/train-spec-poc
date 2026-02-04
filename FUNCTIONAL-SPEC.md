@@ -27,8 +27,8 @@ As a daily commuter traveling between Lempäälä and Tampere, I want to track t
 
 Display two summary cards (one for each train) showing:
 
-- **On-time percentage**: Percentage of trains with ≤0 min delay. **Denominator:** all trains in the range for that train (including cancelled), so `onTimeCount / totalCount * 100`.
-- **Slight delay percentage**: Trains with 1–5 minutes delay (same denominator).
+- **On-time percentage**: Percentage of trains with **≤1 min** delay. **Denominator:** all trains in the range for that train (including cancelled), so `onTimeCount / totalCount * 100`.
+- **Slight delay percentage**: Trains with **2–5** minutes delay (same denominator).
 - **Delayed percentage**: Trains with more than 5 minutes delay (same denominator).
 - **Cancelled count**: Absolute number of cancelled trains.
 - **Average delay**: Mean delay in minutes over **non-cancelled** trains only (cancelled trains are excluded from this average).
@@ -40,8 +40,8 @@ A visual day-by-day representation where each day is shown as a colored cell:
 
 | Color | Status |
 |-------|--------|
-| Green | On time (≤0 min delay) |
-| Yellow | Slight delay (1–5 min) |
+| Green | On time (≤1 min delay) |
+| Yellow | Slight delay (2–5 min) |
 | Red | Delayed (>5 min) |
 | Gray | Cancelled |
 
@@ -102,7 +102,7 @@ interface TrainRecord {
 
 ```
 if (cancelled) → CANCELLED
-else if (delayMinutes <= 0) → ON_TIME
+else if (delayMinutes <= 1) → ON_TIME
 else if (delayMinutes <= 5) → SLIGHT_DELAY
 else → DELAYED
 ```
@@ -146,7 +146,7 @@ const TRAINS = {
 
 2. **API integration is correct**: The app calls the Digitraffic API with the correct train numbers (1719, 9700) and correctly parses the departure times from the appropriate `timeTableRows` entries.
 
-3. **Statistics are accurate**: On-time percentage is calculated as `(onTimeCount / totalCount) * 100` where `totalCount` is all trains in the range for that train (including cancelled). A train is "on time" if `differenceInMinutes <= 0`. Average delay excludes cancelled trains.
+3. **Statistics are accurate**: On-time percentage is calculated as `(onTimeCount / totalCount) * 100` where `totalCount` is all trains in the range for that train (including cancelled). A train is "on time" if **delayMinutes ≤ 1**. Average delay excludes cancelled trains.
 
 4. **Loading state is shown**: A spinner or loading text appears while data is being fetched.
 

@@ -77,7 +77,7 @@ export function DataTable({ train, records }: DataTableProps) {
                     ) : (
                       <Text
                         span
-                        c={record.delayMinutes > 0 ? "red" : "green"}
+                        c={statusColors[record.status]}
                         fw={500}
                       >
                         {record.delayMinutes > 0

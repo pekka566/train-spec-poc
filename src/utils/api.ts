@@ -42,11 +42,12 @@ function getStationCodes(trainNumber: number): { from: string; to: string } {
 }
 
 /**
- * Determine train status based on delay and cancelled flag
+ * Determine train status based on delay and cancelled flag.
+ * Exported so cached records can be re-classified when status logic changes.
  */
-function getTrainStatus(cancelled: boolean, delayMinutes: number): TrainStatus {
+export function getTrainStatus(cancelled: boolean, delayMinutes: number): TrainStatus {
   if (cancelled) return "CANCELLED";
-  if (delayMinutes <= 0) return "ON_TIME";
+  if (delayMinutes <= 1) return "ON_TIME";
   if (delayMinutes <= 5) return "SLIGHT_DELAY";
   return "DELAYED";
 }

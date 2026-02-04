@@ -45,7 +45,7 @@ describe("Timeline", () => {
       <Timeline train={TRAINS.morning} records={[]} />
     );
     expect(screen.getByText("On time")).toBeInTheDocument();
-    expect(screen.getByText("1-5 min")).toBeInTheDocument();
+    expect(screen.getByText("2-5 min")).toBeInTheDocument();
     expect(screen.getByText(">5 min")).toBeInTheDocument();
     expect(screen.getByText("Cancelled")).toBeInTheDocument();
   });
@@ -86,6 +86,19 @@ describe("Timeline", () => {
       <Timeline train={TRAINS.morning} records={records} />
     );
     expect(screen.getByText("27")).toBeInTheDocument();
+  });
+
+  it("renders 1 min delay as ON_TIME with green cell and On time tooltip", () => {
+    const records: TrainRecord[] = [
+      createRecord({ date: "2026-01-27", status: "ON_TIME", delayMinutes: 1 }),
+    ];
+    const { container } = render(
+      <Timeline train={TRAINS.morning} records={records} />
+    );
+    expect(screen.getByText("+1")).toBeInTheDocument();
+    expect(screen.getByText("On time")).toBeInTheDocument();
+    const cell = container.querySelector('[style*="mantine-color-green-5"]');
+    expect(cell).toBeTruthy();
   });
 
   it("renders evening train title when given evening config", () => {

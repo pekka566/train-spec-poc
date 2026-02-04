@@ -146,7 +146,7 @@ curl 'https://rata.digitraffic.fi/api/v1/trains/2026-01-30/9700' --compressed
   - **Delay:** Use `differenceInMinutes` from the departure row. If `differenceInMinutes` or `actualTime` is missing (e.g. train not yet departed), treat as `delayMinutes: 0` and derive status from that, or skip the record—document the choice. If train is cancelled (top-level or departure row), use status CANCELLED per functional spec.
 - **Status classification** (functional spec):
   - `cancelled` → `CANCELLED`
-  - else `delayMinutes <= 0` → `ON_TIME`
+  - else `delayMinutes <= 1` → `ON_TIME`
   - else `delayMinutes <= 5` → `SLIGHT_DELAY`
   - else → `DELAYED`
 - Implement this parsing in a dedicated function (e.g. in `api.ts` or `utils/parseTrain.ts`) and reuse it wherever API response is turned into `TrainRecord`.

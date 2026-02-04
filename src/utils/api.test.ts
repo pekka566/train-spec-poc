@@ -112,6 +112,43 @@ describe("api", () => {
       expect(record?.cancelled).toBe(false);
     });
 
+    it("classifies 1 minute delay as ON_TIME", () => {
+      const response: TrainResponse = {
+        trainNumber: 1719,
+        departureDate: "2026-01-27",
+        trainType: "HL",
+        operatorShortCode: "vr",
+        runningCurrently: false,
+        cancelled: false,
+        timeTableRows: [
+          {
+            stationShortCode: "LPÄ",
+            type: "DEPARTURE",
+            scheduledTime: "2026-01-27T06:20:00Z",
+            actualTime: "2026-01-27T06:21:00Z",
+            differenceInMinutes: 1,
+            commercialStop: true,
+            cancelled: false,
+          },
+          {
+            stationShortCode: "TPE",
+            type: "ARRIVAL",
+            scheduledTime: "2026-01-27T06:35:00Z",
+            actualTime: "2026-01-27T06:36:00Z",
+            differenceInMinutes: 1,
+            commercialStop: true,
+            cancelled: false,
+          },
+        ],
+      };
+
+      const record = parseTrainResponse(response);
+
+      expect(record).not.toBeNull();
+      expect(record?.delayMinutes).toBe(1);
+      expect(record?.status).toBe("ON_TIME");
+    });
+
     it("parses evening train correctly", () => {
       const response: TrainResponse = {
         trainNumber: 9700,

@@ -1,5 +1,6 @@
 import type { TrainRecord } from "@/types/train";
 import { TRAIN_NUMBERS } from "@/types/train";
+import { getTrainStatus } from "./api";
 import { getWeekdaysInRange, isToday } from "./dateUtils";
 
 const STORAGE_PREFIX = "train";
@@ -32,7 +33,10 @@ export function getTrainFromStorage(
   }
 
   try {
-    return JSON.parse(stored) as TrainRecord;
+    const record = JSON.parse(stored) as TrainRecord;
+    // Re-derive status from delay so cached data reflects current classification (e.g. 1 min = on time)
+    record.status = getTrainStatus(record.cancelled, record.delayMinutes);
+    return record;
   } catch {
     return null;
   }
