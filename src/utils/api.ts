@@ -53,12 +53,14 @@ export function getTrainStatus(cancelled: boolean, delayMinutes: number): TrainS
 }
 
 /**
- * Parse Digitraffic API response to TrainRecord
+ * Parse Digitraffic API response to TrainRecord with explicit from/to stations.
+ * Use for arbitrary trains on a route (e.g. GraphQL trainsByDepartureDate).
  */
-export function parseTrainResponse(response: TrainResponse): TrainRecord | null {
-  const { from, to } = getStationCodes(response.trainNumber);
-
-  // Find departure and arrival rows
+export function parseTrainResponseWithStations(
+  response: TrainResponse,
+  from: string,
+  to: string
+): TrainRecord | null {
   const departureRow = response.timeTableRows.find(
     (row: TimeTableRow) => row.type === "DEPARTURE" && row.stationShortCode === from
   );
@@ -86,4 +88,12 @@ export function parseTrainResponse(response: TrainResponse): TrainRecord | null 
     delayMinutes,
     status,
   };
+}
+
+/**
+ * Parse Digitraffic API response to TrainRecord (uses known train numbers for from/to).
+ */
+export function parseTrainResponse(response: TrainResponse): TrainRecord | null {
+  const { from, to } = getStationCodes(response.trainNumber);
+  return parseTrainResponseWithStations(response, from, to);
 }

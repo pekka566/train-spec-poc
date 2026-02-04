@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Container,
   Title,
@@ -19,6 +19,7 @@ import { SummaryCard } from "@/components/SummaryCard";
 import { Timeline } from "@/components/Timeline";
 import { DataTable } from "@/components/DataTable";
 import { useTrainData } from "@/hooks/useTrainData";
+import { runRouteFetchOnce } from "@/utils/apiGraphql";
 import { getDefaultDateRange } from "@/utils/dateUtils";
 import { computeSummary, filterByTrain } from "@/utils/statsCalculator";
 import { TRAINS } from "@/types/train";
@@ -28,6 +29,10 @@ function App() {
   const [startDate, setStartDate] = useState(defaultRange.startDate);
   const [endDate, setEndDate] = useState(defaultRange.endDate);
   const [activeTab, setActiveTab] = useState<TabValue>("summary");
+
+  useEffect(() => {
+    runRouteFetchOnce();
+  }, []);
 
   const {
     data,
