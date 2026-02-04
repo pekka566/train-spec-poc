@@ -66,7 +66,7 @@ describe("SummaryCard", () => {
       <SummaryCard train={TRAINS.morning} summary={createSummary()} variant="morning" />
     );
     expect(screen.getByText("On time")).toBeInTheDocument();
-    expect(screen.getByText("2-5m")).toBeInTheDocument();
-    expect(screen.getByText(">5m")).toBeInTheDocument();
+    expect(screen.getByText("2-5 min")).toBeInTheDocument();
+    expect(screen.getByText(">5 min")).toBeInTheDocument();
   });
 });

@@ -1,4 +1,12 @@
-import { Card, Text, Stack, Progress, SimpleGrid, Box } from "@mantine/core";
+import {
+  Card,
+  Text,
+  Title,
+  Stack,
+  Progress,
+  SimpleGrid,
+  Box,
+} from "@mantine/core";
 import type { TrainSummary, TrainConfig } from "@/types/train";
 import { StatusLegend, STATUS_LEGEND_ITEMS } from "./StatusLegend";
 
@@ -24,10 +32,10 @@ export function SummaryCard({ train, summary, variant }: SummaryCardProps) {
     >
       <Stack gap="md" style={{ color: "black" }}>
         <Box>
-          <Text fw={700} size="lg" tt="uppercase">
+          <Title order={2} size="lg" fw={700} tt="uppercase">
             {variant === "morning" ? "Morning Train" : "Evening Train"}{" "}
             {train.scheduledTime}
-          </Text>
+          </Title>
           <Text size="sm" opacity={0.9}>
             {train.direction}
           </Text>

@@ -9,6 +9,8 @@ import {
   Center,
   SimpleGrid,
   Box,
+  Button,
+  Anchor,
 } from "@mantine/core";
 import { IconAlertCircle, IconInbox } from "@tabler/icons-react";
 import { DateRangePicker } from "@/components/DateRangePicker";
@@ -48,21 +50,16 @@ function App() {
     if (error) {
       return (
         <Alert
-          icon={<IconAlertCircle size={16} />}
+          icon={<IconAlertCircle size={16} aria-hidden />}
           title="Error"
           color="red"
           variant="light"
         >
           {error.message}
           <Box mt="sm">
-            <Text
-              size="sm"
-              c="blue"
-              style={{ cursor: "pointer" }}
-              onClick={fetch}
-            >
+            <Button variant="light" size="sm" onClick={fetch}>
               Retry
-            </Text>
+            </Button>
           </Box>
         </Alert>
       );
@@ -72,7 +69,7 @@ function App() {
     if (tooManyApiCalls && hasFetched) {
       return (
         <Alert
-          icon={<IconAlertCircle size={16} />}
+          icon={<IconAlertCircle size={16} aria-hidden />}
           title="Too many API calls"
           color="orange"
           variant="light"
@@ -91,9 +88,9 @@ function App() {
     // Show loading state
     if (isLoading) {
       return (
-        <Center py="xl">
+        <Center py="xl" role="status" aria-live="polite" aria-atomic="true">
           <Stack align="center" gap="sm">
-            <Loader size="lg" />
+            <Loader size="lg" aria-hidden />
             <Text c="dimmed">Fetching data...</Text>
           </Stack>
         </Center>
@@ -103,9 +100,14 @@ function App() {
     // Show empty state if no data after fetch
     if (hasFetched && data.length === 0) {
       return (
-        <Center py="xl">
+        <Center
+          py="xl"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           <Stack align="center" gap="sm">
-            <IconInbox size={48} color="gray" />
+            <IconInbox size={48} color="gray" aria-hidden />
             <Text c="dimmed">No data</Text>
             <Text size="sm" c="dimmed">
               No train data found for the selected date range.
@@ -120,7 +122,12 @@ function App() {
     // Show initial state before fetch
     if (!hasFetched) {
       return (
-        <Center py="xl">
+        <Center
+          py="xl"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
           <Text c="dimmed">
             Select a date range and click "Fetch Data" to load train data.
           </Text>
@@ -166,30 +173,56 @@ function App() {
 
   return (
     <Container size="lg" py="xl">
+      <Anchor
+        href="#main-content"
+        size="sm"
+        styles={{
+          root: {
+            position: "absolute",
+            left: "-9999px",
+            zIndex: 9999,
+            "&:focus, &:focus-visible": {
+              left: "0.5rem",
+              position: "fixed",
+            },
+          },
+        }}
+      >
+        Skip to main content
+      </Anchor>
       <Stack gap="lg">
         {/* Header */}
-        <Box ta="center">
+        <Box component="header" ta="center">
           <Title order={1}>Commute Punctuality</Title>
           <Text c="dimmed">Lempäälä - Tampere</Text>
         </Box>
 
-        {/* Date Range Picker */}
-        <DateRangePicker
-          startDate={startDate}
-          endDate={endDate}
-          onStartDateChange={setStartDate}
-          onEndDateChange={setEndDate}
-          onFetch={fetch}
-          isLoading={isLoading}
-          tooManyApiCalls={tooManyApiCalls}
-          neededApiCalls={neededApiCalls}
-        />
+        {/* Main: date picker, tabs, content */}
+        <Box component="main" id="main-content" tabIndex={-1}>
+          <Stack gap="lg">
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              onFetch={fetch}
+              isLoading={isLoading}
+              tooManyApiCalls={tooManyApiCalls}
+              neededApiCalls={neededApiCalls}
+            />
 
-        {/* Tab Navigation */}
-        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+            <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Content Area */}
-        {renderContent()}
+            <Box
+              component="section"
+              role="region"
+              aria-labelledby={`tab-${activeTab}`}
+              id={`${activeTab}-panel`}
+            >
+              {renderContent()}
+            </Box>
+          </Stack>
+        </Box>
 
         {/* Footer */}
         <Text size="sm" c="dimmed" ta="center">

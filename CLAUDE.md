@@ -47,8 +47,8 @@ src/
 - **Evening train 9700**: Tampere (TPE) → Lempäälä (LPÄ), 16:35
 
 ### Status Classification
-- `ON_TIME`: delay ≤ 0 min
-- `SLIGHT_DELAY`: 1-5 min delay
+- `ON_TIME`: delay ≤ 1 min
+- `SLIGHT_DELAY`: 2-5 min delay
 - `DELAYED`: >5 min delay
 - `CANCELLED`: train cancelled
 

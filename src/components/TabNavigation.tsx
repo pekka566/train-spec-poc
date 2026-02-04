@@ -15,13 +15,25 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
       onChange={(value) => onTabChange(value as TabValue)}
     >
       <Tabs.List>
-        <Tabs.Tab value="summary" leftSection={<IconChartBar size={16} />}>
+        <Tabs.Tab
+          value="summary"
+          id="tab-summary"
+          leftSection={<IconChartBar size={16} aria-hidden />}
+        >
           Summary
         </Tabs.Tab>
-        <Tabs.Tab value="timeline" leftSection={<IconCalendar size={16} />}>
+        <Tabs.Tab
+          value="timeline"
+          id="tab-timeline"
+          leftSection={<IconCalendar size={16} aria-hidden />}
+        >
           Timeline
         </Tabs.Tab>
-        <Tabs.Tab value="table" leftSection={<IconTable size={16} />}>
+        <Tabs.Tab
+          value="table"
+          id="tab-table"
+          leftSection={<IconTable size={16} aria-hidden />}
+        >
           Table
         </Tabs.Tab>
       </Tabs.List>

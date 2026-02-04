@@ -65,15 +65,21 @@ export function DateRangePicker({
           onClick={onFetch}
           loading={isLoading}
           disabled={tooManyApiCalls}
-          leftSection={<IconSearch size={16} />}
+          leftSection={<IconSearch size={16} aria-hidden />}
           style={{ alignSelf: "flex-end" }}
         >
           Fetch Data
         </Button>
       </Group>
       {tooManyApiCalls && (
-        <div style={{ color: "var(--mantine-color-red-6)", fontSize: "0.875rem" }}>
-          Would require {neededApiCalls} API calls. Maximum is {30}.
+        <div
+          role="alert"
+          style={{
+            color: "var(--mantine-color-red-6)",
+            fontSize: "0.875rem",
+          }}
+        >
+          Would require {neededApiCalls} API calls. Maximum is 30.
         </div>
       )}
     </Stack>

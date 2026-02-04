@@ -45,9 +45,17 @@ export function StatusLegend({
   justify,
 }: StatusLegendProps) {
   return (
-    <Group gap={gap} mt={mt} justify={justify}>
+    <Group
+      component="ul"
+      gap={gap}
+      mt={mt}
+      justify={justify}
+      style={{ listStyle: "none", padding: 0, margin: 0 }}
+    >
       {items.map((item) => (
-        <LegendItem key={item.label} color={item.color} label={item.label} />
+        <Box component="li" key={item.label}>
+          <LegendItem color={item.color} label={item.label} />
+        </Box>
       ))}
     </Group>
   );

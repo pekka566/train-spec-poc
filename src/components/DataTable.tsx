@@ -1,4 +1,13 @@
-import { Table, Badge, Card, Text, Stack, ScrollArea } from "@mantine/core";
+import {
+  Table,
+  Badge,
+  Card,
+  Text,
+  Title,
+  Stack,
+  ScrollArea,
+  UnstyledButton,
+} from "@mantine/core";
 import { useState } from "react";
 import type { TrainRecord, TrainConfig } from "@/types/train";
 import { formatFinnishDate, formatFinnishTime } from "@/utils/dateUtils";
@@ -35,19 +44,30 @@ export function DataTable({ train, records }: DataTableProps) {
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
       <Stack gap="md">
-        <Text fw={600}>
+        <Title order={2} size="h4" fw={600}>
           {train.name} {train.scheduledTime} - {train.direction}
-        </Text>
+        </Title>
 
         <ScrollArea>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
                 <Table.Th
-                  onClick={toggleSort}
-                  style={{ cursor: "pointer", userSelect: "none" }}
+                  aria-sort={
+                    sortAscending ? "ascending" : "descending"
+                  }
                 >
-                  Date {sortAscending ? "^" : "v"}
+                  <UnstyledButton
+                    onClick={toggleSort}
+                    style={{
+                      cursor: "pointer",
+                      userSelect: "none",
+                      width: "100%",
+                      textAlign: "left",
+                    }}
+                  >
+                    Date {sortAscending ? "(ascending ^)" : "(descending v)"}
+                  </UnstyledButton>
                 </Table.Th>
                 <Table.Th>Train</Table.Th>
                 <Table.Th>Scheduled</Table.Th>

@@ -1,4 +1,4 @@
-import { Card, Text, Group, Stack, Box, Tooltip } from "@mantine/core";
+import { Card, Text, Title, Group, Stack, Tooltip } from "@mantine/core";
 import type { TrainRecord, TrainConfig } from "@/types/train";
 import { formatFinnishDate } from "@/utils/dateUtils";
 import { sortByDate } from "@/utils/statsCalculator";
@@ -41,9 +41,9 @@ export function Timeline({ train, records }: TimelineProps) {
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
       <Stack gap="md">
-        <Text fw={600}>
+        <Title order={2} size="h4" fw={600}>
           {train.name} {train.scheduledTime} - {train.direction}
-        </Text>
+        </Title>
 
         {sortedRecords.length === 0 ? (
           <Text c="dimmed" ta="center" py="md">
@@ -57,12 +57,16 @@ export function Timeline({ train, records }: TimelineProps) {
                 label={getTooltipContent(record)}
                 withArrow
               >
-                <Box
-                  w={44}
-                  h={44}
+                <button
+                  type="button"
+                  aria-label={getTooltipContent(record)}
                   style={{
-                    backgroundColor: `var(--mantine-color-${statusColors[record.status]})`,
+                    width: 44,
+                    height: 44,
+                    padding: 0,
+                    border: "none",
                     borderRadius: "var(--mantine-radius-sm)",
+                    backgroundColor: `var(--mantine-color-${statusColors[record.status]})`,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
@@ -76,7 +80,7 @@ export function Timeline({ train, records }: TimelineProps) {
                   <Text size="xs" c="white" opacity={0.8}>
                     {record.date.slice(8)}
                   </Text>
-                </Box>
+                </button>
               </Tooltip>
             ))}
           </Group>
