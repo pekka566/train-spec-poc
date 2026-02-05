@@ -12,6 +12,8 @@ As a daily commuter traveling between Lempäälä and Tampere, I want to track t
 - **Morning train**: Lempäälä → Tampere, scheduled departure 8:20
 - **Evening train**: Tampere → Lempäälä, scheduled departure 16:35
 
+**Route for one-time background fetch:** The app performs a single GraphQL reittihaku (see Local storage) that fetches trains whose route **contains** the station **Lempäälä** (by station name). All trains returned by this query are stored. For each train, the **departure station** (Lempäälä or Tampere) is determined by which of the two has the **earlier** scheduled departure time on the route; this also defines the **direction** (Lempäälä → Tampere or Tampere → Lempäälä). Stored data includes train number, station name, scheduled departure time, and a **direction** (or equivalent) indicating which way the train runs. Both directions are stored (trains departing from Lempäälä and from Tampere). These data will be used in the application later.
+
 ## Functional Requirements
 
 ### 1. Date Range Selection
@@ -73,6 +75,7 @@ A table showing all data points with columns:
 
 ### 6. Local Storage (caching)
 
+- The app may perform a one-time background fetch of today’s route trains and store them locally; no user action is required and this does not change the main "Fetch Data" flow. This fetch uses a **single** GraphQL query filtered by **station name** "Lempäälä" (trains whose route contains Lempäälä). **All** trains returned by the query are stored (no filtering by departure station). For each train, the departure station (Lempäälä or Tampere asema) is derived by comparing the two DEPARTURE times and taking the **earlier** one as the train’s departure on this route; the stored record includes train number, station name, scheduled departure time, and a **direction** (or equivalent) indicating whether the train runs Lempäälä → Tampere or Tampere → Lempäälä. Both directions are stored. These data will be used in the application later.
 - **Store** fetched train data in the browser’s local storage, keyed by date and train number.
 - **Do not store** data for the current date (today); today’s data is never written to local storage.
 - **Use stored data** when the user requests data for a given date and train: if a valid entry exists in local storage for that date and train, use it and do not call the API.
@@ -129,6 +132,12 @@ const TRAINS = {
   }
 };
 ```
+
+The main "Fetch Data" flow uses the fixed train numbers 1719 and 9700 above. The one-time GraphQL route fetch (see §6) uses a single query (trains containing Lempäälä) and stores **all** returned trains; both Lempäälä → Tampere and Tampere → Lempäälä directions are included. Each stored record includes a direction (or departure-station) field derived from which departure time (Lempäälä or Tampere) is earlier.
+
+### Route data (one-time fetch)
+
+Stored route items (e.g. `RouteTrainInfo`) include at least: **train number**, **station name** (departure station), **scheduled departure time** (ISO), and a **direction** (or equivalent) indicating which way the train runs on the Lempäälä–Tampere route (e.g. `"Lempäälä → Tampere"` or `"Tampere → Lempäälä"`, or a departure-station field from which direction can be derived). The direction is derived from which of the two DEPARTURE times (Lempäälä vs Tampere asema) is earlier.
 
 ## User interface
 

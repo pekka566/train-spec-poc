@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Container,
   Title,
@@ -29,8 +29,11 @@ function App() {
   const [startDate, setStartDate] = useState(defaultRange.startDate);
   const [endDate, setEndDate] = useState(defaultRange.endDate);
   const [activeTab, setActiveTab] = useState<TabValue>("summary");
+  const routeFetchStartedRef = useRef(false);
 
   useEffect(() => {
+    if (routeFetchStartedRef.current) return;
+    routeFetchStartedRef.current = true;
     runRouteFetchOnce();
   }, []);
 

@@ -1,6 +1,6 @@
 # Train Punctuality Tracker – Visual Specification
 
-This document defines the **visual design** of the application: layout, components, colors, and responsive behaviour. Functional and data requirements are in the [functional specification](FUNCTIONAL-SPEC.md); implementation details are in the [technical specification](TECHNICAL-SPEC.md).
+This document defines the **visual design** of the application: layout, components, colors, and responsive behaviour. Functional and data requirements are in the [functional specification](FUNCTIONAL-SPEC.md); implementation details are in the [technical specification](TECHNICAL-SPEC.md). Route data (train number, station name, departure time) is fetched in the background and will be used in the application later.
 
 ---
 

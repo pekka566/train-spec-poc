@@ -1,103 +1,98 @@
-import type { TrainRecord } from "@/types/train";
-import { parseTrainResponseWithStations } from "./api";
 import { getTodayFinnish } from "./dateUtils";
-import type { TimeTableRow } from "@/types/train";
-import type { TrainResponse } from "@/types/train";
 
 /** Digitraffic GraphQL v2 POST endpoint (per FI docs: /api/v2/graphql/graphql). */
 const GRAPHQL_URL = "https://rata.digitraffic.fi/api/v2/graphql/graphql";
 
-const LPÄ = "LPÄ";
-const TPE = "TPE";
+/** Station names used for filtering (Digitraffic: Tampere asema). */
+const STATION_LEMPÄÄLÄ = "Lempäälä";
+const STATION_TAMPERE = "Tampere asema";
 
-/** GraphQL timeTableRow shape (station as object) */
+/** Direction on the Lempäälä–Tampere route. */
+export type RouteDirection = "Lempäälä → Tampere" | "Tampere → Lempäälä";
+
+/** Minimal stored data per train for today's route (both directions). */
+export interface RouteTrainInfo {
+  trainNumber: number;
+  stationName: string;
+  scheduledDeparture: string;
+  direction: RouteDirection;
+}
+
+/** GraphQL timeTableRow shape (minimal: type, scheduledTime, station name only). */
 interface GraphQLTimeTableRow {
   type: string;
   scheduledTime: string;
-  actualTime?: string | null;
-  differenceInMinutes?: number | null;
-  station?: { shortCode: string } | null;
-  cancelled?: boolean;
+  station?: { name: string } | null;
 }
 
-/** GraphQL train node shape (trainType is object TrainType! with name). */
+/** GraphQL train node shape (minimal query). */
 interface GraphQLTrain {
   trainNumber: number;
-  departureDate: string;
-  trainType: { name: string };
-  cancelled: boolean;
   timeTableRows?: GraphQLTimeTableRow[] | null;
 }
 
-function mapGraphQLRow(row: GraphQLTimeTableRow): TimeTableRow {
-  return {
-    stationShortCode: row.station?.shortCode ?? "",
-    type: row.type as "DEPARTURE" | "ARRIVAL",
-    scheduledTime: row.scheduledTime,
-    actualTime: row.actualTime ?? undefined,
-    differenceInMinutes: row.differenceInMinutes ?? undefined,
-    commercialStop: false,
-    cancelled: row.cancelled ?? false,
-  };
-}
+/** timeTableRows filter: only Lempäälä and Tampere asema (reduces response size). */
+const TIME_TABLE_ROWS_WHERE = `where: { or: [{ station: { name: { equals: "${STATION_LEMPÄÄLÄ}" } } }, { station: { name: { equals: "${STATION_TAMPERE}" } } }] }`;
 
-function graphQLTrainToResponse(g: GraphQLTrain): TrainResponse {
-  return {
-    trainNumber: g.trainNumber,
-    departureDate: g.departureDate,
-    trainType: g.trainType?.name ?? "",
-    operatorShortCode: "",
-    runningCurrently: false,
-    cancelled: g.cancelled,
-    timeTableRows: (g.timeTableRows ?? []).map(mapGraphQLRow),
-  };
-}
+/**
+ * Derive departure station and direction from timeTableRows.
+ * Compares DEPARTURE times at Lempäälä and Tampere asema; the earlier one is the train's departure on this route.
+ */
+function getDepartureAndDirection(
+  rows: GraphQLTimeTableRow[]
+): { stationName: string; scheduledDeparture: string; direction: RouteDirection } | null {
+  const depL = rows.find((r) => r.type === "DEPARTURE" && r.station?.name === STATION_LEMPÄÄLÄ);
+  const depT = rows.find((r) => r.type === "DEPARTURE" && r.station?.name === STATION_TAMPERE);
 
-/** Determine from/to for a train between LPÄ and TPE from its timeTableRows. */
-function getDirectionFromTo(rows: TimeTableRow[]): { from: string; to: string } | null {
-  const depLPÄ = rows.find((r) => r.type === "DEPARTURE" && r.stationShortCode === LPÄ);
-  const arrTPE = rows.find((r) => r.type === "ARRIVAL" && r.stationShortCode === TPE);
-  const depTPE = rows.find((r) => r.type === "DEPARTURE" && r.stationShortCode === TPE);
-  const arrLPÄ = rows.find((r) => r.type === "ARRIVAL" && r.stationShortCode === LPÄ);
-
-  if (depLPÄ && arrTPE) return { from: LPÄ, to: TPE };
-  if (depTPE && arrLPÄ) return { from: TPE, to: LPÄ };
+  if (depL && depT) {
+    const earlier = depL.scheduledTime <= depT.scheduledTime ? depL : depT;
+    const direction: RouteDirection =
+      earlier === depL ? "Lempäälä → Tampere" : "Tampere → Lempäälä";
+    const stationName = earlier === depL ? STATION_LEMPÄÄLÄ : STATION_TAMPERE;
+    return { stationName, scheduledDeparture: earlier.scheduledTime, direction };
+  }
+  if (depL) {
+    return {
+      stationName: STATION_LEMPÄÄLÄ,
+      scheduledDeparture: depL.scheduledTime,
+      direction: "Lempäälä → Tampere",
+    };
+  }
+  if (depT) {
+    return {
+      stationName: STATION_TAMPERE,
+      scheduledDeparture: depT.scheduledTime,
+      direction: "Tampere → Lempäälä",
+    };
+  }
   return null;
 }
 
-/** True if train has both LPÄ and TPE in its timeTableRows (route Lempäälä ↔ Tampere). */
-function isTrainOnRoute(rows: TimeTableRow[]): boolean {
-  const stations = new Set(rows.map((r) => r.stationShortCode));
-  return stations.has(LPÄ) && stations.has(TPE);
-}
-
-/**
- * Fetch all trains for Lempäälä ↔ Tampere route for today via GraphQL v2.
- * Uses trainsByDepartureDate with filter: trains that pass through LPÄ, then keeps only those that also have TPE.
- */
-export async function fetchRouteTodayGraphQL(): Promise<TrainRecord[]> {
-  const date = getTodayFinnish();
-  // Inline date in query (no variables) so request matches working curl; API can return 400 when using variables.
-  const query = `query RouteToday {
+/** Build minimal query: single query filtered by Lempäälä, request trainNumber + timeTableRows for Lempäälä/Tampere. */
+function buildRouteQuery(date: string): string {
+  return `query RouteToday {
   trainsByDepartureDate(
     departureDate: "${date}",
-    where: { timeTableRows: { contains: { station: { shortCode: { equals: "LPÄ" } } } } },
+    where: { timeTableRows: { contains: { station: { name: { equals: "${STATION_LEMPÄÄLÄ}" } } } } },
     orderBy: { trainNumber: ASCENDING }
   ) {
     trainNumber
-    departureDate
-    trainType { name }
-    cancelled
-    timeTableRows {
+    timeTableRows(${TIME_TABLE_ROWS_WHERE}) {
       type
       scheduledTime
-      actualTime
-      differenceInMinutes
-      cancelled
-      station { shortCode }
+      station { name }
     }
   }
 }`;
+}
+
+/**
+ * Fetch trains for Lempäälä–Tampere route for today via GraphQL v2 (single query).
+ * Returns all trains that pass through Lempäälä (both directions). Direction is derived from which departure (Lempäälä or Tampere) is earlier.
+ */
+export async function fetchRouteTodayGraphQL(): Promise<RouteTrainInfo[]> {
+  const date = getTodayFinnish();
+  const query = buildRouteQuery(date);
 
   const res = await fetch(GRAPHQL_URL, {
     method: "POST",
@@ -122,25 +117,34 @@ export async function fetchRouteTodayGraphQL(): Promise<TrainRecord[]> {
   }
 
   const trains = json.data?.trainsByDepartureDate ?? [];
-  const records: TrainRecord[] = [];
+  const result: RouteTrainInfo[] = [];
 
   for (const g of trains) {
-    const response = graphQLTrainToResponse(g);
-    if (!isTrainOnRoute(response.timeTableRows)) continue;
+    const rows = g.timeTableRows ?? [];
+    const info = getDepartureAndDirection(rows);
+    if (!info) continue;
 
-    const dir = getDirectionFromTo(response.timeTableRows);
-    if (!dir) continue;
-
-    const record = parseTrainResponseWithStations(response, dir.from, dir.to);
-    if (record) records.push(record);
+    result.push({
+      trainNumber: g.trainNumber,
+      stationName: info.stationName,
+      scheduledDeparture: info.scheduledDeparture,
+      direction: info.direction,
+    });
   }
 
-  return records;
+  result.sort((a, b) => a.trainNumber - b.trainNumber);
+  return result;
+}
+
+/** localStorage value shape for today's route. */
+export interface RouteTodayStorage {
+  date: string;
+  trains: RouteTrainInfo[];
 }
 
 /**
- * Run one-time route fetch for today: fetch via GraphQL v2 and save train numbers + full data to localStorage.
- * Idempotent per day (uses a "fetched today" flag so it only runs once per day).
+ * Run one-time route fetch for today: fetch via GraphQL v2 and save to localStorage.
+ * Idempotent per day (train:route:fetched flag). Stores all trains from the single query (both directions).
  */
 export async function runRouteFetchOnce(): Promise<void> {
   const today = getTodayFinnish();
@@ -151,14 +155,10 @@ export async function runRouteFetchOnce(): Promise<void> {
   }
 
   try {
-    const records = await fetchRouteTodayGraphQL();
-    const numbers = records.map((r) => r.trainNumber);
+    const trains = await fetchRouteTodayGraphQL();
+    const payload: RouteTodayStorage = { date: today, trains };
 
-    localStorage.setItem("train:route:numbers", JSON.stringify(numbers));
-    localStorage.setItem(
-      `train:route:today:${today}`,
-      JSON.stringify(records)
-    );
+    localStorage.setItem(`train:route:today:${today}`, JSON.stringify(payload));
     localStorage.setItem(flagKey, today);
   } catch {
     // Silent: no UI, no throw

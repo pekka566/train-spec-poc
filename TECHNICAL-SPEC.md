@@ -139,6 +139,17 @@ curl 'https://rata.digitraffic.fi/api/v1/trains/2026-01-30/9700' --compressed
   - Throws on network errors or non-OK HTTP status so TanStack Query can treat them as errors and optionally retry.
 - **Local storage** is not inside `fetchTrain`; the **caller** (e.g. the TanStack Query fetcher or a wrapper in the hook) is responsible for: (1) checking localStorage for past dates and returning early if data exists; (2) calling `fetchTrain` when no cached data or when date is today; (3) after a successful fetch, writing to localStorage only when date is not today (using a key like `train:{date}:{trainNumber}` and storing TrainRecord or raw response as JSON).
 
+### One-time GraphQL route fetch
+
+- **Purpose:** Fetch train numbers, station name, scheduled departure times, and direction for the **Lempäälä–Tampere** route for the current day (one-time background fetch; not the main "Fetch Data" flow). **Both** directions (Lempäälä → Tampere and Tampere → Lempäälä) are returned and stored.
+- **When it runs:** Once on app load, triggered from `App.tsx`, guarded by a ref so it runs at most once per load (avoids double run under React Strict Mode).
+- **Endpoint:** `POST https://rata.digitraffic.fi/api/v2/graphql/graphql` with `Content-Type: application/json`, `Accept-Encoding: gzip`.
+- **Filter:** A **single** query. Filter by **station name** "Lempäälä": `where: { timeTableRows: { contains: { station: { name: { equals: "Lempäälä" } } } } }`. All trains that pass through Lempäälä (both directions) are returned; no second query for Tampere.
+- **Query fields (minimal):** Only `trainNumber` and `timeTableRows(where: ...) { type, scheduledTime, station { name } }`. Do not request `departureDate`, `trainType`, or `station.shortCode`/`uicCode`. **Response size:** Use `timeTableRows(where: { or: [{ station: { name: { equals: "Lempäälä" } } }, { station: { name: { equals: "Tampere asema" } } }] })` so the server returns only rows for Lempäälä and Tampere asema; this reduces payload size.
+- **Parsing:** Store **all** trains returned by the query (no filtering by departure station). For each train, determine the **departure station** by comparing the two DEPARTURE rows (Lempäälä and Tampere asema): the one with the **earlier** `scheduledTime` is the train’s departure on this route segment. From that, derive the **direction** (e.g. Lempäälä → Tampere if Lempäälä departure is earlier, otherwise Tampere → Lempäälä). Produce one stored record per train with train number, departure station name, scheduled departure time, and direction (or equivalent field).
+- **Storage:** Key `train:route:today:{date}`, value `{ date: string, trains: RouteTrainInfo[] }`. `RouteTrainInfo` includes at least `trainNumber`, `stationName` (departure station), `scheduledDeparture`, and a **direction** (or equivalent) indicating Lempäälä → Tampere vs Tampere → Lempäälä. **All** trains from the single query are stored (both directions). No full TrainRecord or full timeTableRows is stored. Readers may support the legacy shape (without `stationName` or `direction`) for compatibility.
+- **Idempotence:** Per-day flag `train:route:fetched` set to today’s date after a successful fetch, so the fetch runs at most once per day; the ref in App ensures at most one in-flight run per load.
+
 ### Parsing to TrainRecord
 
 - Map Digitraffic `TrainResponse` + `timeTableRows` to the functional spec’s **TrainRecord**:
