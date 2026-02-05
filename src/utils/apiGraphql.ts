@@ -143,6 +143,58 @@ export interface RouteTodayStorage {
 }
 
 /**
+ * Read today's route data from localStorage.
+ * Returns null if missing or invalid. Use date (YYYY-MM-DD) for the key train:route:today:{date}.
+ */
+export function getRouteTodayFromStorage(date: string): RouteTodayStorage | null {
+  const raw = localStorage.getItem(`train:route:today:${date}`);
+  if (!raw) return null;
+  try {
+    const payload = JSON.parse(raw) as RouteTodayStorage;
+    if (!payload?.date || !Array.isArray(payload.trains)) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+const OUTBOUND_DIRECTION: RouteDirection = "Lempäälä → Tampere";
+const RETURN_DIRECTION: RouteDirection = "Tampere → Lempäälä";
+
+/**
+ * Split route trains by direction and sort by scheduledDeparture (ascending).
+ * Outbound = Lempäälä → Tampere, return = Tampere → Lempäälä.
+ */
+export function getRouteTrainsByDirection(
+  trains: RouteTrainInfo[]
+): {
+  outbound: RouteTrainInfo[];
+  return: RouteTrainInfo[];
+} {
+  const byDep = (a: RouteTrainInfo, b: RouteTrainInfo) =>
+    a.scheduledDeparture.localeCompare(b.scheduledDeparture);
+  const outbound = trains
+    .filter((t) => t.direction === OUTBOUND_DIRECTION)
+    .sort(byDep);
+  const returnTrains = trains
+    .filter((t) => t.direction === RETURN_DIRECTION)
+    .sort(byDep);
+  return { outbound, return: returnTrains };
+}
+
+/**
+ * Filter return trains to those departing after the selected outbound (same-day comparison by scheduledDeparture).
+ */
+export function filterReturnOptions(
+  returnTrains: RouteTrainInfo[],
+  selectedOutboundDeparture: string
+): RouteTrainInfo[] {
+  return returnTrains.filter(
+    (t) => t.scheduledDeparture > selectedOutboundDeparture
+  );
+}
+
+/**
  * Run one-time route fetch for today: fetch via GraphQL v2 and save to localStorage.
  * Idempotent per day (train:route:fetched flag). Stores all trains from the single query (both directions).
  */

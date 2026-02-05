@@ -25,9 +25,17 @@ As a daily commuter traveling between Lempäälä and Tampere, I want to track t
 - **Weekdays only:** Only Monday–Friday are included in the analysis; weekend dates in the range are ignored.
 - End date cannot be in the future.
 
+### 1.5 Train selection (selects)
+
+- **Lähtöjuna (aamujuna):** One dropdown (select). Options = from the stored route data (see §6) those trains with direction **Lempäälä → Tampere**. Options are ordered by scheduled departure time (earliest first). The user selects the outbound (morning) train to track.
+- **Paluujuna (iltapäiväjuna):** A second dropdown. Options = from the stored route data those trains with direction **Tampere → Lempäälä**. **Filtering:** the return-train list shows only trains whose **scheduled departure time is later** than the selected outbound train’s scheduled departure time (same day; compare using `scheduledDeparture`). Thus the return train always departs after the outbound train.
+- **Data source:** Options are read from stored route data (localStorage key `train:route:today:{date}`; typically use today’s date). Data is `RouteTrainInfo[]` (trainNumber, stationName, scheduledDeparture, direction).
+- **Display format:** Each option is shown as **hh:mm (train number)**. Example: `08:20 (1719)`, `16:35 (9700)`. Time is derived from `scheduledDeparture` (ISO) in Finnish timezone, 24h format.
+- **When route data is missing:** If no route data is available (e.g. first visit or fetch not yet run), use default train numbers 1719 (outbound) and 9700 (return) as today; the selects may be disabled or show "Ei reittidataa" until data exists.
+
 ### 2. Summary View
 
-Display two summary cards (one for each train) showing:
+Display two summary cards: the first for the **selected outbound train** (lähtöjuna), the second for the **selected return train** (paluujuna). Each card shows:
 
 - **On-time percentage**: Percentage of trains with **≤1 min** delay. **Denominator:** all trains in the range for that train (including cancelled), so `onTimeCount / totalCount * 100`.
 - **Slight delay percentage**: Trains with **2–5** minutes delay (same denominator).
@@ -47,7 +55,7 @@ A visual day-by-day representation where each day is shown as a colored cell:
 | Red | Delayed (>5 min) |
 | Gray | Cancelled |
 
-Cells should show the delay amount on hover or inside the cell. Display both trains' timelines.
+Cells should show the delay amount on hover or inside the cell. Display timelines for both the selected outbound train and the selected return train.
 
 ### 4. Detail Table View
 
@@ -63,11 +71,11 @@ A table showing all data points with columns:
 | Status | Badge: On time / Slight delay / Delayed / Cancelled (use status colors per visual spec) |
 
 - **Sortable:** At least the Date column must be sortable; others optional. **Default sort:** newest first (date descending).
-- **Layout:** Either one combined table with a Train column, or two separate table sections (Morning train, Evening train) as in the visual spec wireframes.
+- **Layout:** Either one combined table with a Train column, or two separate table sections (selected outbound train, selected return train) as in the visual spec wireframes.
 
 ### 5. Data Fetching
 
-- When the user clicks "Fetch", first compute **needed API calls** from the selected date range and current local storage (as in section 1): for each weekday in range (end not in future) and each train, count 1 if that (date, trainNumber) is not in storage or is today. If **needed API calls > 30**, show an error message and **do not perform any API requests**. If **needed API calls ≤ 30**, proceed to fetch only for (date, trainNumber) that require an API call (today or not in storage).
+- When the user clicks "Fetch", the trains to fetch are the **selected outbound** and **selected return** train numbers (from the two selects). Compute **needed API calls** from the selected date range and current local storage: for each weekday in range (end not in future) and each of these two train numbers, count 1 if that (date, trainNumber) is not in storage or is today. If **needed API calls > 30**, show an error message and **do not perform any API requests**. If **needed API calls ≤ 30**, proceed to fetch only for (date, trainNumber) that require an API call (today or not in storage).
 - Fetch data for each (date, trainNumber) that needs it by calling the API with the specific train number.
 - Show a loading indicator during fetch.
 - Handle errors gracefully (network errors, missing data).
@@ -133,7 +141,7 @@ const TRAINS = {
 };
 ```
 
-The main "Fetch Data" flow uses the fixed train numbers 1719 and 9700 above. The one-time GraphQL route fetch (see §6) uses a single query (trains containing Lempäälä) and stores **all** returned trains; both Lempäälä → Tampere and Tampere → Lempäälä directions are included. Each stored record includes a direction (or departure-station) field derived from which departure time (Lempäälä or Tampere) is earlier.
+The app supports **either** fixed train numbers (1719, 9700) **or** user-selected trains from the route data. When route data exists, the two selects (lähtöjuna, paluujuna) supply the train numbers used for Fetch, Summary, Timeline, and Table; when route data is missing, defaults 1719 (outbound) and 9700 (return) are used. The one-time GraphQL route fetch (see §6) uses a single query (trains containing Lempäälä) and stores **all** returned trains; both directions are included. Each stored record includes a direction field derived from which departure time is earlier.
 
 ### Route data (one-time fetch)
 
@@ -142,10 +150,10 @@ Stored route items (e.g. `RouteTrainInfo`) include at least: **train number**, *
 ## User interface
 
 - **Header:** Title "🚂 Commute Punctuality", subtitle "Lempäälä ↔ Tampere" (use this exact wording).
-- **Single-page:** header, date range picker with a “Fetch” button, **tab navigation** (Summary | Timeline | Table), and a content area that shows one of the three views. Data is fetched only when the user clicks Fetch (no automatic fetch on load). Footer text: "Data: Digitraffic / Fintraffic • Weekdays only".
-- **Summary**: Two cards (morning and evening train) with statistics and a proportion bar.
-- **Timeline**: Day-by-day colored cells per train.
-- **Table**: Sortable list of all records.
+- **Single-page:** header, date range picker, **two selects** (Lähtöjuna, Paluujuna) with options in format hh:mm (train number), a “Fetch” button, **tab navigation** (Summary | Timeline | Table), and a content area that shows one of the three views. Data is fetched only when the user clicks Fetch (no automatic fetch on load). Footer text: "Data: Digitraffic / Fintraffic • Weekdays only".
+- **Summary**: Two cards (selected outbound train, selected return train) with statistics and a proportion bar. Headings use the selected train's departure time and number, e.g. "08:20 (1719) – Lempäälä → Tampere".
+- **Timeline**: Day-by-day colored cells for the selected outbound and return trains.
+- **Table**: Sortable list of all records for the two selected trains.
 - **Loading and errors**: A loading indicator while data is fetched; an error message if the API fails; an empty state if no data for the range.
 - **Visual design** (layout, components, colors, responsive behaviour) is defined in [VISUAL-SPEC.md](VISUAL-SPEC.md).
 
@@ -153,7 +161,7 @@ Stored route items (e.g. `RouteTrainInfo`) include at least: **train number**, *
 
 1. **Date selection works correctly**: Selecting a date range and clicking "Fetch" retrieves data for weekdays only within that range. The allowed range is constrained by the "needed API calls ≤ 30" rule (not by a fixed number of calendar days).
 
-2. **API integration is correct**: The app calls the Digitraffic API with the correct train numbers (1719, 9700) and correctly parses the departure times from the appropriate `timeTableRows` entries.
+2. **API integration is correct**: The app calls the Digitraffic API with the train numbers from the two selects (or defaults 1719, 9700 when no route data) and correctly parses the departure times from the appropriate `timeTableRows` entries.
 
 3. **Statistics are accurate**: On-time percentage is calculated as `(onTimeCount / totalCount) * 100` where `totalCount` is all trains in the range for that train (including cancelled). A train is "on time" if **delayMinutes ≤ 1**. Average delay excludes cancelled trains.
 
@@ -168,6 +176,8 @@ Stored route items (e.g. `RouteTrainInfo`) include at least: **train number**, *
 8. **Local storage caching**: Fetched data for past dates is stored in browser local storage and reused when the same date and train is requested again (no API call). Data for the current date is never stored; the API is always called for today's trains.
 
 9. **API call limit**: When the user selects a date range and clicks "Fetch", the app computes the number of needed API calls (using data in local storage). If that number is greater than 30, an error is shown and no API calls are made. If it is 30 or less, data is fetched only for the (date, trainNumber) pairs that are not in storage or are today.
+
+10. **Train selection**: The user can choose the outbound and return train from the two dropdowns. Options are shown as **hh:mm (train number)**. The return-train list shows only trains that depart **later** than the selected outbound train.
 
 ## Out of scope (for initial version)
 

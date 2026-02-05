@@ -79,15 +79,15 @@ const trainQueryKey = (date: string, trainNumber: number) =>
 
 ### Needed API calls helper
 
-- **`getNeededApiCalls(startDate: string, endDate: string): number`** — Implement in `trainStorage.ts` or `dateUtils.ts`. Takes the date range (ISO YYYY-MM-DD), computes the list of weekdays only (end not in future), and returns the number of (date, trainNumber) pairs that would require an API call: for each weekday in range and each train (1719, 9700), count 1 if date is today (Finnish timezone) or if there is no valid data in local storage for that (date, trainNumber). The UI or hook calls this **before** triggering fetch; if the result is > 30, show error and do not fetch; if ≤ 30, proceed with fetch.
+- **`getNeededApiCalls(startDate: string, endDate: string, trainNumbers: [number, number]): number`** — Takes the date range (ISO YYYY-MM-DD) and the two train numbers (selected outbound and return). Computes the list of weekdays only (end not in future), and returns the number of (date, trainNumber) pairs that would require an API call: for each weekday in range and each of the two train numbers, count 1 if date is today (Finnish timezone) or if there is no valid data in local storage for that (date, trainNumber). The UI or hook calls this **before** triggering fetch; if the result is > 30, show error and do not fetch; if ≤ 30, proceed with fetch. When no route data exists, use default train numbers (e.g. 1719, 9700).
 
 ### Hook contract
 
-- **`useTrainData(startDate: string, endDate: string)`** (or with an “enabled” flag so it only runs after “Fetch”):
+- **`useTrainData(startDate: string, endDate: string, trainNumbers: [number, number])`** (or with an “enabled” flag so it only runs after “Fetch”):
   - **When it runs:** Queries run only when the user has triggered a fetch (e.g. Fetch clicked). Before that, return empty data; use an `enabled` option so TanStack Query does not run until fetch is requested.
-  - **Input:** ISO date strings (YYYY-MM-DD), weekday-only, end not in future (validate in UI or hook). **Before** running queries, the hook (or its caller) must compute **needed API calls** from the range and local storage (e.g. via `getNeededApiCalls(startDate, endDate)`); if > 30, do not run queries and instead set/return an error (e.g. `error: { type: 'TOO_MANY_API_CALLS', needed: number }`).
+  - **Input:** ISO date strings (YYYY-MM-DD), weekday-only, end not in future, and the two selected train numbers. **Before** running queries, the hook (or its caller) must compute **needed API calls** from the range, local storage, and these train numbers (e.g. via `getNeededApiCalls(startDate, endDate, trainNumbers)`); if > 30, do not run queries and instead set/return an error (e.g. `error: { type: 'TOO_MANY_API_CALLS', needed: number }`).
   - **Output:** `{ data: TrainRecord[] | undefined, isLoading: boolean, error: Error | null }`; optionally expose `neededApiCalls?: number` or an error with code `TOO_MANY_API_CALLS` and `needed` so the UI can show the right message.
-  - **Internally:** TanStack Query (`useQueries` or `queryClient.fetchQuery`), local storage read/write per "Local storage" above, parse to `TrainRecord`, merge and sort by date (newest first).
+  - **Internally:** TanStack Query (`useQueries` or `queryClient.fetchQuery`), local storage read/write per "Local storage" above, parse to `TrainRecord`, merge and sort by date (newest first). All API and storage operations use the two provided train numbers.
 
 ---
 
@@ -149,6 +149,14 @@ curl 'https://rata.digitraffic.fi/api/v1/trains/2026-01-30/9700' --compressed
 - **Parsing:** Store **all** trains returned by the query (no filtering by departure station). For each train, determine the **departure station** by comparing the two DEPARTURE rows (Lempäälä and Tampere asema): the one with the **earlier** `scheduledTime` is the train’s departure on this route segment. From that, derive the **direction** (e.g. Lempäälä → Tampere if Lempäälä departure is earlier, otherwise Tampere → Lempäälä). Produce one stored record per train with train number, departure station name, scheduled departure time, and direction (or equivalent field).
 - **Storage:** Key `train:route:today:{date}`, value `{ date: string, trains: RouteTrainInfo[] }`. `RouteTrainInfo` includes at least `trainNumber`, `stationName` (departure station), `scheduledDeparture`, and a **direction** (or equivalent) indicating Lempäälä → Tampere vs Tampere → Lempäälä. **All** trains from the single query are stored (both directions). No full TrainRecord or full timeTableRows is stored. Readers may support the legacy shape (without `stationName` or `direction`) for compatibility.
 - **Idempotence:** Per-day flag `train:route:fetched` set to today’s date after a successful fetch, so the fetch runs at most once per day; the ref in App ensures at most one in-flight run per load.
+
+### Train selection (route data for selects)
+
+- **Reading route data:** Read from `localStorage.getItem(\`train:route:today:${date}\`)` (typically `date` = today). Parse as `RouteTodayStorage = { date: string, trains: RouteTrainInfo[] }`. Use this to populate the two train selects (lähtöjuna, paluujuna).
+- **Splitting by direction:** Partition `trains` by `direction`: `direction === "Lempäälä → Tampere"` → outbound (lähtöjuna) options; `direction === "Tampere → Lempäälä"` → return (paluujuna) options. Sort each list by `scheduledDeparture` ascending.
+- **Return-train filter:** For the paluujuna select, show only those return-direction trains whose `scheduledDeparture` is **greater than** the selected outbound train’s `scheduledDeparture` (compare as ISO strings or parsed dates). When the user changes the outbound selection, recompute the return list; if the currently selected return train is no longer in the filtered list, clear the selection or set it to the first valid return option (document chosen behaviour).
+- **Selected train numbers for API/hook:** The two selected trains (outbound and return) supply the train numbers used for all subsequent data fetching. **`getNeededApiCalls`**, **`getApiCallsNeeded`**, **`getCachedData`**, and REST calls must use these two train numbers (e.g. passed as a parameter like `trainNumbers: [number, number]` or from shared state), not a fixed `[1719, 9700]`.
+- **Defaults:** When no route data is available, use default train numbers 1719 (outbound) and 9700 (return). When route data exists, default outbound = first item in the outbound list (earliest), default return = first item in the filtered return list (earliest return after that outbound).
 
 ### Parsing to TrainRecord
 

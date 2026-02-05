@@ -1,7 +1,9 @@
 import type { TrainRecord } from "@/types/train";
-import { TRAIN_NUMBERS } from "@/types/train";
 import { getTrainStatus } from "./api";
 import { getWeekdaysInRange, isToday } from "./dateUtils";
+
+/** Two train numbers: [outbound, return] for API and cache. */
+export type TrainNumbers = [number, number];
 
 const STORAGE_PREFIX = "train";
 
@@ -61,22 +63,24 @@ export function setTrainInStorage(
 }
 
 /**
- * Calculate the number of API calls needed for a date range
+ * Calculate the number of API calls needed for a date range and selected train numbers.
  * Returns count of (date, trainNumber) pairs that would require an API call:
  * - Today always needs an API call (for each train)
  * - Past dates need an API call if not in local storage
  */
-export function getNeededApiCalls(startDate: string, endDate: string): number {
+export function getNeededApiCalls(
+  startDate: string,
+  endDate: string,
+  trainNumbers: TrainNumbers
+): number {
   const weekdays = getWeekdaysInRange(startDate, endDate);
   let count = 0;
 
   for (const date of weekdays) {
-    for (const trainNumber of TRAIN_NUMBERS) {
+    for (const trainNumber of trainNumbers) {
       if (isToday(date)) {
-        // Today always needs an API call
         count++;
       } else {
-        // Past dates need an API call if not in storage
         const stored = getTrainFromStorage(date, trainNumber);
         if (!stored) {
           count++;
@@ -89,17 +93,18 @@ export function getNeededApiCalls(startDate: string, endDate: string): number {
 }
 
 /**
- * Get pairs of (date, trainNumber) that need API calls
+ * Get pairs of (date, trainNumber) that need API calls for the given train numbers.
  */
 export function getApiCallsNeeded(
   startDate: string,
-  endDate: string
+  endDate: string,
+  trainNumbers: TrainNumbers
 ): Array<{ date: string; trainNumber: number }> {
   const weekdays = getWeekdaysInRange(startDate, endDate);
   const needed: Array<{ date: string; trainNumber: number }> = [];
 
   for (const date of weekdays) {
-    for (const trainNumber of TRAIN_NUMBERS) {
+    for (const trainNumber of trainNumbers) {
       if (isToday(date) || !getTrainFromStorage(date, trainNumber)) {
         needed.push({ date, trainNumber });
       }
@@ -110,18 +115,19 @@ export function getApiCallsNeeded(
 }
 
 /**
- * Get all cached data for a date range
- * Returns records from local storage (excludes today's data which is not cached)
+ * Get all cached data for a date range and selected train numbers.
+ * Returns records from local storage (excludes today's data which is not cached).
  */
 export function getCachedData(
   startDate: string,
-  endDate: string
+  endDate: string,
+  trainNumbers: TrainNumbers
 ): TrainRecord[] {
   const weekdays = getWeekdaysInRange(startDate, endDate);
   const records: TrainRecord[] = [];
 
   for (const date of weekdays) {
-    for (const trainNumber of TRAIN_NUMBERS) {
+    for (const trainNumber of trainNumbers) {
       const record = getTrainFromStorage(date, trainNumber);
       if (record) {
         records.push(record);

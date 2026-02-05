@@ -33,8 +33,9 @@ export function SummaryCard({ train, summary, variant }: SummaryCardProps) {
       <Stack gap="md" style={{ color: "black" }}>
         <Box>
           <Title order={2} size="lg" fw={700} tt="uppercase">
-            {variant === "morning" ? "Morning Train" : "Evening Train"}{" "}
-            {train.scheduledTime}
+            {train.name.includes("(")
+              ? train.name
+              : `${train.name} ${train.scheduledTime}`}
           </Title>
           <Text size="sm" opacity={0.9}>
             {train.direction}

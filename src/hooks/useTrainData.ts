@@ -1,13 +1,19 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useCallback } from "react";
 import type { TrainRecord } from "@/types/train";
-import { fetchTrain, parseTrainResponse } from "@/utils/api";
+import {
+  fetchTrain,
+  parseTrainResponseWithStations,
+  getStationCodesByDirection,
+} from "@/utils/api";
+import type { RouteDirection } from "@/utils/apiGraphql";
 import {
   getNeededApiCalls,
   getApiCallsNeeded,
   getCachedData,
   setTrainInStorage,
   getTrainFromStorage,
+  type TrainNumbers,
 } from "@/utils/trainStorage";
 import { isToday } from "@/utils/dateUtils";
 
@@ -27,40 +33,53 @@ export interface UseTrainDataResult {
 interface FetchState {
   startDate: string;
   endDate: string;
+  trainNumbers: TrainNumbers;
   fetchId: number;
 }
 
+const OUTBOUND_DIR: RouteDirection = "Lempäälä → Tampere";
+const RETURN_DIR: RouteDirection = "Tampere → Lempäälä";
+
 /**
- * Hook for fetching and managing train data
- * Data is only fetched when fetch() is called
+ * Hook for fetching and managing train data.
+ * Data is only fetched when fetch() is called.
+ * Uses the two selected train numbers (outbound, return) for all API and cache operations.
  */
 export function useTrainData(
   startDate: string,
-  endDate: string
+  endDate: string,
+  trainNumbers: TrainNumbers
 ): UseTrainDataResult {
   const queryClient = useQueryClient();
   const [fetchState, setFetchState] = useState<FetchState | null>(null);
   const [hasFetched, setHasFetched] = useState(false);
 
-  // Calculate needed API calls
-  const neededApiCalls = getNeededApiCalls(startDate, endDate);
+  const neededApiCalls = getNeededApiCalls(startDate, endDate, trainNumbers);
   const tooManyApiCalls = neededApiCalls > MAX_API_CALLS;
 
-  // Query to fetch all needed data
   const { data, isLoading, error } = useQuery({
-    queryKey: ["trainData", fetchState?.startDate, fetchState?.endDate, fetchState?.fetchId],
+    queryKey: [
+      "trainData",
+      fetchState?.startDate,
+      fetchState?.endDate,
+      fetchState?.trainNumbers,
+      fetchState?.fetchId,
+    ],
     queryFn: async () => {
       if (!fetchState) return [];
 
-      const apiCallsNeeded = getApiCallsNeeded(fetchState.startDate, fetchState.endDate);
+      const apiCallsNeeded = getApiCallsNeeded(
+        fetchState.startDate,
+        fetchState.endDate,
+        fetchState.trainNumbers
+      );
       const results: TrainRecord[] = [];
       const errors: Array<{ date: string; trainNumber: number; error: Error }> = [];
+      const [outboundNum] = fetchState.trainNumbers;
 
-      // Fetch all needed data
       await Promise.all(
         apiCallsNeeded.map(async ({ date, trainNumber }) => {
           try {
-            // Check cache first for non-today dates
             if (!isToday(date)) {
               const cached = getTrainFromStorage(date, trainNumber);
               if (cached) {
@@ -69,13 +88,18 @@ export function useTrainData(
               }
             }
 
-            // Fetch from API
             const response = await fetchTrain(date, trainNumber);
             if (response) {
-              const record = parseTrainResponse(response);
+              const direction =
+                trainNumber === outboundNum ? OUTBOUND_DIR : RETURN_DIR;
+              const { from, to } = getStationCodesByDirection(direction);
+              const record = parseTrainResponseWithStations(
+                response,
+                from,
+                to
+              );
               if (record) {
                 results.push(record);
-                // Store in local storage (won't store today's data)
                 setTrainInStorage(date, trainNumber, record);
               }
             }
@@ -89,21 +113,23 @@ export function useTrainData(
         })
       );
 
-      // Add cached data that wasn't in the API calls list
-      const cachedData = getCachedData(fetchState.startDate, fetchState.endDate);
+      const cachedData = getCachedData(
+        fetchState.startDate,
+        fetchState.endDate,
+        fetchState.trainNumbers
+      );
       for (const cached of cachedData) {
         const exists = results.some(
-          (r) => r.date === cached.date && r.trainNumber === cached.trainNumber
+          (r) =>
+            r.date === cached.date && r.trainNumber === cached.trainNumber
         );
         if (!exists) {
           results.push(cached);
         }
       }
 
-      // Sort by date (newest first)
       results.sort((a, b) => b.date.localeCompare(a.date));
 
-      // Only throw if all requests failed
       if (errors.length > 0 && results.length === 0) {
         throw new Error("Failed to fetch train data. Please try again.");
       }
@@ -116,20 +142,17 @@ export function useTrainData(
   });
 
   const fetch = useCallback(() => {
-    // Always set hasFetched when user clicks Fetch, so error states can be shown
     setHasFetched(true);
-    
-    // Then check and return early if too many calls
     if (tooManyApiCalls) return;
 
-    // Invalidate previous query and trigger new fetch
     queryClient.invalidateQueries({ queryKey: ["trainData"] });
     setFetchState({
       startDate,
       endDate,
-      fetchId: Date.now(), // Unique ID to force refetch
+      trainNumbers,
+      fetchId: Date.now(),
     });
-  }, [startDate, endDate, tooManyApiCalls, queryClient]);
+  }, [startDate, endDate, trainNumbers, tooManyApiCalls, queryClient]);
 
   return {
     data: data ?? [],

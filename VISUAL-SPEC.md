@@ -1,6 +1,6 @@
 # Train Punctuality Tracker – Visual Specification
 
-This document defines the **visual design** of the application: layout, components, colors, and responsive behaviour. Functional and data requirements are in the [functional specification](FUNCTIONAL-SPEC.md); implementation details are in the [technical specification](TECHNICAL-SPEC.md). Route data (train number, station name, departure time) is fetched in the background and will be used in the application later.
+This document defines the **visual design** of the application: layout, components, colors, and responsive behaviour. Functional and data requirements are in the [functional specification](FUNCTIONAL-SPEC.md); implementation details are in the [technical specification](TECHNICAL-SPEC.md). Route data (train number, station name, departure time) is fetched in the background and used for **train selection**: the user chooses an outbound and a return train via two dropdowns; those selections drive all data fetch and display.
 
 ---
 
@@ -16,6 +16,11 @@ This document defines the **visual design** of the application: layout, componen
 
 ### Overall Layout Structure
 
+**Train selection (two dropdowns):**
+- **Lähtöjuna (outbound):** Label e.g. "Lähtöjuna" or "Aamujuna"; options shown as **hh:mm (train number)** (e.g. 08:20 (1719)). Options from route data, direction Lempäälä → Tampere, sorted by departure time.
+- **Paluujuna (return):** Label "Paluujuna" or "Iltapäiväjuna"; same format hh:mm (numero). Options from route data, direction Tampere → Lempäälä; **list is filtered** so only trains with departure time **after** the selected outbound are shown.
+- **Placement:** Same row as Start date, End date, and Fetch Data, or on a second row below. Order: Start date, End date, Lähtöjuna, Paluujuna, Fetch Data.
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
@@ -24,12 +29,13 @@ This document defines the **visual design** of the application: layout, componen
 │                                                                 │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│   ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐     │
-│   │ Start date  │  │  End date   │  │   🔍 Fetch Data     │     │
-│   │ 2026-01-15  │  │ 2026-01-29  │  │                     │     │
-│   └─────────────┘  └─────────────┘  └─────────────────────┘     │
-│   (App may show "too many API calls" error if range would        │
-│    require more than 30 API calls; no fixed calendar limit.)    │
+│   ┌─────────────┐ ┌─────────────┐ ┌──────────────────┐ ┌──────────────────┐ ┌─────────────────┐
+│   │ Start date  │ │  End date   │ │ Lähtöjuna        │ │ Paluujuna        │ │ 🔍 Fetch Data   │
+│   │ 2026-01-15  │ │ 2026-01-29  │ │ 08:20 (1719)  ▼  │ │ 16:35 (9700)  ▼  │ │                 │
+│   └─────────────┘ └─────────────┘ └──────────────────┘ └──────────────────┘ └─────────────────┘
+│   Outbound options: hh:mm (train number), Lempäälä → Tampere. Return options: same format,
+│   Tampere → Lempäälä; return list is filtered to trains departing after the selected outbound.
+│   (App may show "too many API calls" error if range would require more than 30 API calls.)   │
 │                                                                 │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
@@ -57,7 +63,7 @@ This document defines the **visual design** of the application: layout, componen
 │                                                                 │
 │  ┌─────────────────────────────┐ ┌─────────────────────────────┐│
 │  │ ░░░░░░░░░░░░░░░░░░░░░░░░░░  │ │ ░░░░░░░░░░░░░░░░░░░░░░░░░░  ││
-│  │ ░  MORNING TRAIN 8:20    ░  │ │ ░  EVENING TRAIN 16:35   ░  ││
+│  │ ░  08:20 (1719) – LPÄ→TPE ░  │ │ ░  16:35 (9700) – TPE→LPÄ ░  ││
 │  │ ░  Lempäälä → Tampere    ░  │ │ ░  Tampere → Lempäälä    ░  ││
 │  │ ░░░░░░░░░░░░░░░░░░░░░░░░░░  │ │ ░░░░░░░░░░░░░░░░░░░░░░░░░░  ││
 │  │                             │ │                             ││
@@ -78,9 +84,10 @@ This document defines the **visual design** of the application: layout, componen
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
+Card content: First card = selected outbound train (departure time + number, e.g. 08:20 (1719)); second card = selected return train (e.g. 16:35 (9700)). Replace placeholder times/numbers with the user’s dropdown choices.
 Card color coding:
-- Morning card: Orange to Amber gradient background
-- Evening card: Indigo to Purple gradient background
+- First (outbound) card: Orange to Amber gradient background
+- Second (return) card: Indigo to Purple gradient background
 - Stats boxes: Semi-transparent white overlay
 ```
 
@@ -90,7 +97,7 @@ Card color coding:
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────────┐│
-│  │  Morning Train 8:20 – Lempäälä → Tampere                    ││
+│  │  08:20 (1719) – Lempäälä → Tampere  (selected outbound)     ││
 │  │                                                             ││
 │  │  ┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐         ││
 │  │  │✓ ││✓ ││+2││✓ ││+8││✓ ││✓ ││✓ ││+1││✓ ││✓ ││+3│         ││
@@ -102,7 +109,7 @@ Card color coding:
 │  └─────────────────────────────────────────────────────────────┘│
 │                                                                 │
 │  ┌─────────────────────────────────────────────────────────────┐│
-│  │  Evening Train 16:35 – Tampere → Lempäälä                   ││
+│  │  16:35 (9700) – Tampere → Lempäälä  (selected return)      ││
 │  │                                                             ││
 │  │  ┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐┌──┐         ││
 │  │  │✓ ││+4││✓ ││✕ ││+2││✓ ││+6││✓ ││✓ ││+1││✓ ││✓ │         ││
@@ -127,7 +134,7 @@ Cell behavior:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
-│  Morning Train 8:20 – Lempäälä → Tampere                        │
+│  Outbound: 08:20 (1719) – Lempäälä → Tampere                    │
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │  Date      │ Train    │ Scheduled │ Actual  │ Delay │Status ││
 │  ├────────────┼──────────┼───────────┼─────────┼───────┼───────┤│
@@ -142,7 +149,7 @@ Cell behavior:
 │  │     ...    │   ...    │    ...    │   ...   │  ...  │ ...   ││
 │  └─────────────────────────────────────────────────────────────┘│
 │                                                                 │
-│  Evening Train 16:35 – Tampere → Lempäälä                       │
+│  Return: 16:35 (9700) – Tampere → Lempäälä                      │
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │  Date      │ Train    │ Scheduled │ Actual  │ Delay │Status ││
 │  ├────────────┼──────────┼───────────┼─────────┼───────┼───────┤│
@@ -160,7 +167,7 @@ Cell behavior:
 └─────────────────────────────────────────────────────────────────┘
 
 Table features:
-- One combined table with Train column, or two sections (Morning train table, Evening train table); both are acceptable. Default sort: newest first (descending by date). At least Date column sortable.
+- Two sections: first = selected outbound train, second = selected return train. Headers show selected time and number (e.g. "08:20 (1719) – Lempäälä → Tampere"). Default sort: newest first (descending by date). At least Date column sortable.
 - Alternating row colors for readability.
 - Status column: colored badge (green / yellow / red / gray per color scheme).
 - Cancelled: Actual and Delay columns show "-".
@@ -179,6 +186,12 @@ Table features:
 │ ┌───────────────────────┐ │
 │ │ Start    │ End        │ │
 │ │ 2026-01-15│ 2026-01-29│ │
+│ └───────────────────────┘ │
+│ ┌───────────────────────┐ │
+│ │ Lähtöjuna  08:20 (1719)▼│
+│ └───────────────────────┘ │
+│ ┌───────────────────────┐ │
+│ │ Paluujuna 16:35 (9700)▼│
 │ └───────────────────────┘ │
 │ ┌───────────────────────┐ │
 │ │     🔍 Fetch Data     │ │
@@ -215,7 +228,8 @@ Table features:
 
 Mobile adaptations:
 - Cards stack vertically
-- Date inputs on same row, button below
+- Date inputs on same row; train selects (Lähtöjuna, Paluujuna) stacked vertically or in two columns—no horizontal overflow of the full page
+- Fetch button below selects
 - Tab labels abbreviated or icon-only
 - Table becomes horizontally scrollable
 - Timeline cells wrap to multiple rows
@@ -282,6 +296,10 @@ When the selected date range would require more than 30 API calls (based on what
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+### No route data (train selects)
+
+When route data is not available (e.g. first visit or route fetch has not run), the train selection dropdowns are **disabled** and show the text **"Ei reittidataa"** (or a single default option). The app uses default train numbers (1719 outbound, 9700 return) for Fetch and all views until route data exists; then the selects are populated from `train:route:today:{date}` and the user can choose trains. Document in implementation which behaviour is used (disabled + "Ei reittidataa" vs. fixed 1719/9700 with no other options).
 
 ---
 

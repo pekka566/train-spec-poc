@@ -1,5 +1,6 @@
 import type { TrainResponse, TrainRecord, TrainStatus, TimeTableRow } from "@/types/train";
 import { TRAINS } from "@/types/train";
+import type { RouteDirection } from "@/utils/apiGraphql";
 
 const API_BASE = "https://rata.digitraffic.fi/api/v1";
 
@@ -32,13 +33,25 @@ export async function fetchTrain(
 }
 
 /**
- * Get station codes for a train number
+ * Get station codes for a train number (default 1719/9700).
  */
 function getStationCodes(trainNumber: number): { from: string; to: string } {
   if (trainNumber === TRAINS.morning.number) {
     return { from: TRAINS.morning.from, to: TRAINS.morning.to };
   }
   return { from: TRAINS.evening.from, to: TRAINS.evening.to };
+}
+
+/**
+ * Get station codes by route direction (for parsing any train on the route).
+ */
+export function getStationCodesByDirection(
+  direction: RouteDirection
+): { from: string; to: string } {
+  if (direction === "Lempäälä → Tampere") {
+    return { from: "LPÄ", to: "TPE" };
+  }
+  return { from: "TPE", to: "LPÄ" };
 }
 
 /**

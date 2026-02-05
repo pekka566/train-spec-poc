@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import {
   Container,
   Title,
@@ -19,10 +19,31 @@ import { SummaryCard } from "@/components/SummaryCard";
 import { Timeline } from "@/components/Timeline";
 import { DataTable } from "@/components/DataTable";
 import { useTrainData } from "@/hooks/useTrainData";
-import { runRouteFetchOnce } from "@/utils/apiGraphql";
-import { getDefaultDateRange } from "@/utils/dateUtils";
+import {
+  runRouteFetchOnce,
+  getRouteTodayFromStorage,
+  getRouteTrainsByDirection,
+  filterReturnOptions,
+  type RouteTrainInfo,
+} from "@/utils/apiGraphql";
+import { getDefaultDateRange, getTodayFinnish, formatFinnishTime } from "@/utils/dateUtils";
 import { computeSummary, filterByTrain } from "@/utils/statsCalculator";
-import { TRAINS } from "@/types/train";
+import { TRAINS, type TrainConfig } from "@/types/train";
+import type { TrainNumbers } from "@/utils/trainStorage";
+
+function routeTrainToTrainConfig(route: RouteTrainInfo): TrainConfig {
+  const time = formatFinnishTime(route.scheduledDeparture);
+  const from = route.direction === "Lempäälä → Tampere" ? "LPÄ" : "TPE";
+  const to = route.direction === "Lempäälä → Tampere" ? "TPE" : "LPÄ";
+  return {
+    number: route.trainNumber,
+    name: `${time} (${route.trainNumber})`,
+    from,
+    to,
+    scheduledTime: time,
+    direction: route.direction,
+  };
+}
 
 function App() {
   const defaultRange = getDefaultDateRange();
@@ -30,12 +51,63 @@ function App() {
   const [endDate, setEndDate] = useState(defaultRange.endDate);
   const [activeTab, setActiveTab] = useState<TabValue>("summary");
   const routeFetchStartedRef = useRef(false);
+  const today = getTodayFinnish();
+
+  const routeStorage = useMemo(
+    () => getRouteTodayFromStorage(today),
+    [today]
+  );
+  const { outbound: outboundList, return: returnList } = useMemo(() => {
+    if (!routeStorage?.trains?.length) return { outbound: [], return: [] };
+    return getRouteTrainsByDirection(routeStorage.trains);
+  }, [routeStorage]);
+
+  const [selectedOutbound, setSelectedOutbound] = useState<RouteTrainInfo | null>(null);
+  const [selectedReturn, setSelectedReturn] = useState<RouteTrainInfo | null>(null);
 
   useEffect(() => {
     if (routeFetchStartedRef.current) return;
     routeFetchStartedRef.current = true;
     runRouteFetchOnce();
   }, []);
+
+  useEffect(() => {
+    if (outboundList.length > 0 && !selectedOutbound) {
+      setSelectedOutbound(outboundList[0]);
+    }
+  }, [outboundList, selectedOutbound]);
+
+  const returnOptions = useMemo(() => {
+    if (!selectedOutbound) return returnList;
+    return filterReturnOptions(returnList, selectedOutbound.scheduledDeparture);
+  }, [returnList, selectedOutbound]);
+
+  useEffect(() => {
+    if (returnOptions.length === 0) {
+      setSelectedReturn(null);
+    } else {
+      const stillValid =
+        selectedReturn &&
+        returnOptions.some((t) => t.trainNumber === selectedReturn.trainNumber);
+      if (!stillValid) {
+        setSelectedReturn(returnOptions[0]);
+      }
+    }
+  }, [returnOptions, selectedReturn]);
+
+  const trainNumbers: TrainNumbers = [
+    selectedOutbound?.trainNumber ?? TRAINS.morning.number,
+    selectedReturn?.trainNumber ?? TRAINS.evening.number,
+  ];
+
+  const morningTrainConfig: TrainConfig =
+    selectedOutbound != null
+      ? routeTrainToTrainConfig(selectedOutbound)
+      : TRAINS.morning;
+  const eveningTrainConfig: TrainConfig =
+    selectedReturn != null
+      ? routeTrainToTrainConfig(selectedReturn)
+      : TRAINS.evening;
 
   const {
     data,
@@ -45,10 +117,10 @@ function App() {
     neededApiCalls,
     fetch,
     hasFetched,
-  } = useTrainData(startDate, endDate);
+  } = useTrainData(startDate, endDate, trainNumbers);
 
-  const morningRecords = filterByTrain(data, TRAINS.morning.number);
-  const eveningRecords = filterByTrain(data, TRAINS.evening.number);
+  const morningRecords = filterByTrain(data, trainNumbers[0]);
+  const eveningRecords = filterByTrain(data, trainNumbers[1]);
 
   const morningSummary = computeSummary(morningRecords);
   const eveningSummary = computeSummary(eveningRecords);
@@ -149,12 +221,12 @@ function App() {
         return (
           <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
             <SummaryCard
-              train={TRAINS.morning}
+              train={morningTrainConfig}
               summary={morningSummary}
               variant="morning"
             />
             <SummaryCard
-              train={TRAINS.evening}
+              train={eveningTrainConfig}
               summary={eveningSummary}
               variant="evening"
             />
@@ -164,16 +236,16 @@ function App() {
       case "timeline":
         return (
           <Stack gap="lg">
-            <Timeline train={TRAINS.morning} records={morningRecords} />
-            <Timeline train={TRAINS.evening} records={eveningRecords} />
+            <Timeline train={morningTrainConfig} records={morningRecords} />
+            <Timeline train={eveningTrainConfig} records={eveningRecords} />
           </Stack>
         );
 
       case "table":
         return (
           <Stack gap="lg">
-            <DataTable train={TRAINS.morning} records={morningRecords} />
-            <DataTable train={TRAINS.evening} records={eveningRecords} />
+            <DataTable train={morningTrainConfig} records={morningRecords} />
+            <DataTable train={eveningTrainConfig} records={eveningRecords} />
           </Stack>
         );
     }
@@ -217,6 +289,13 @@ function App() {
               isLoading={isLoading}
               tooManyApiCalls={tooManyApiCalls}
               neededApiCalls={neededApiCalls}
+              outboundOptions={outboundList}
+              returnOptions={returnOptions}
+              selectedOutbound={selectedOutbound}
+              selectedReturn={selectedReturn}
+              onOutboundChange={setSelectedOutbound}
+              onReturnChange={setSelectedReturn}
+              noRouteData={!routeStorage?.trains?.length}
             />
 
             <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />

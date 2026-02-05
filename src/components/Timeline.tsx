@@ -42,7 +42,9 @@ export function Timeline({ train, records }: TimelineProps) {
     <Card shadow="sm" padding="lg" radius="md" withBorder>
       <Stack gap="md">
         <Title order={2} size="h4" fw={600}>
-          {train.name} {train.scheduledTime} - {train.direction}
+          {train.name.includes("(")
+            ? `${train.name} – ${train.direction}`
+            : `${train.name} ${train.scheduledTime} – ${train.direction}`}
         </Title>
 
         {sortedRecords.length === 0 ? (

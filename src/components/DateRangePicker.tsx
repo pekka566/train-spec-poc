@@ -1,8 +1,9 @@
-import { Group, Button, Stack } from "@mantine/core";
+import { Group, Button, Stack, Select } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { IconSearch } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { getTodayFinnish } from "@/utils/dateUtils";
+import { getTodayFinnish, formatFinnishTime } from "@/utils/dateUtils";
+import type { RouteTrainInfo } from "@/utils/apiGraphql";
 
 interface DateRangePickerProps {
   startDate: string;
@@ -13,6 +14,17 @@ interface DateRangePickerProps {
   isLoading: boolean;
   tooManyApiCalls: boolean;
   neededApiCalls: number;
+  outboundOptions: RouteTrainInfo[];
+  returnOptions: RouteTrainInfo[];
+  selectedOutbound: RouteTrainInfo | null;
+  selectedReturn: RouteTrainInfo | null;
+  onOutboundChange: (train: RouteTrainInfo | null) => void;
+  onReturnChange: (train: RouteTrainInfo | null) => void;
+  noRouteData: boolean;
+}
+
+function optionLabel(t: RouteTrainInfo): string {
+  return `${formatFinnishTime(t.scheduledDeparture)} (${t.trainNumber})`;
 }
 
 export function DateRangePicker({
@@ -24,6 +36,13 @@ export function DateRangePicker({
   isLoading,
   tooManyApiCalls,
   neededApiCalls,
+  outboundOptions,
+  returnOptions,
+  selectedOutbound,
+  selectedReturn,
+  onOutboundChange,
+  onReturnChange,
+  noRouteData,
 }: DateRangePickerProps) {
   const today = getTodayFinnish();
   const maxDate = dayjs(today).toDate();
@@ -39,6 +58,15 @@ export function DateRangePicker({
       onEndDateChange(dayjs(value).format("YYYY-MM-DD"));
     }
   };
+
+  const outboundData = outboundOptions.map((t) => ({
+    value: String(t.trainNumber),
+    label: optionLabel(t),
+  }));
+  const returnData = returnOptions.map((t) => ({
+    value: String(t.trainNumber),
+    label: optionLabel(t),
+  }));
 
   return (
     <Stack gap="xs">
@@ -60,6 +88,38 @@ export function DateRangePicker({
           valueFormat="YYYY-MM-DD"
           size="sm"
           style={{ flex: 1, minWidth: 140 }}
+        />
+        <Select
+          label="Lähtöjuna"
+          placeholder={noRouteData ? "Ei reittidataa" : undefined}
+          data={outboundData}
+          value={selectedOutbound ? String(selectedOutbound.trainNumber) : null}
+          onChange={(value) => {
+            const train = value
+              ? outboundOptions.find((t) => String(t.trainNumber) === value) ?? null
+              : null;
+            onOutboundChange(train ?? null);
+          }}
+          disabled={noRouteData}
+          clearable={false}
+          size="sm"
+          style={{ minWidth: 140 }}
+        />
+        <Select
+          label="Paluujuna"
+          placeholder={noRouteData ? "Ei reittidataa" : undefined}
+          data={returnData}
+          value={selectedReturn ? String(selectedReturn.trainNumber) : null}
+          onChange={(value) => {
+            const train = value
+              ? returnOptions.find((t) => String(t.trainNumber) === value) ?? null
+              : null;
+            onReturnChange(train ?? null);
+          }}
+          disabled={noRouteData}
+          clearable={false}
+          size="sm"
+          style={{ minWidth: 140 }}
         />
         <Button
           onClick={onFetch}
