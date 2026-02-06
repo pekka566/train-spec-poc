@@ -12,7 +12,7 @@ As a daily commuter traveling between Lempäälä and Tampere, I want to track t
 - **Morning train**: Lempäälä → Tampere, scheduled departure 8:20
 - **Evening train**: Tampere → Lempäälä, scheduled departure 16:35
 
-**Route for one-time background fetch:** The app performs a single GraphQL reittihaku (see Local storage) that fetches trains whose route **contains** the station **Lempäälä** (by station name). All trains returned by this query are stored. For each train, the **departure station** (Lempäälä or Tampere) is determined by which of the two has the **earlier** scheduled departure time on the route; this also defines the **direction** (Lempäälä → Tampere or Tampere → Lempäälä). Stored data includes train number, station name, scheduled departure time, and a **direction** (or equivalent) indicating which way the train runs. Both directions are stored (trains departing from Lempäälä and from Tampere). These data will be used in the application later.
+**Route for one-time background fetch:** The app performs a single GraphQL route search (see Local storage) that fetches trains whose route contains the station **Lempäälä** (by station name). Only trains that **stop at Lempäälä** (Digitraffic field `trainStopping` true at Lempäälä) are stored; trains that pass through Lempäälä without stopping are excluded. For each stored train, the **departure station** (Lempäälä or Tampere) is determined by which of the two has the **earlier** scheduled departure time on the route; this also defines the **direction** (Lempäälä → Tampere or Tampere → Lempäälä). Stored data includes train number, station name, scheduled departure time, and a **direction** (or equivalent) indicating which way the train runs. Both directions are stored (trains that stop at Lempäälä and depart from Lempäälä, or from Tampere toward Lempäälä). These data are used for the train selection dropdowns.
 
 ## Functional Requirements
 
@@ -27,15 +27,15 @@ As a daily commuter traveling between Lempäälä and Tampere, I want to track t
 
 ### 1.5 Train selection (selects)
 
-- **Lähtöjuna (aamujuna):** One dropdown (select). Options = from the stored route data (see §6) those trains with direction **Lempäälä → Tampere**. Options are ordered by scheduled departure time (earliest first). The user selects the outbound (morning) train to track.
-- **Paluujuna (iltapäiväjuna):** A second dropdown. Options = from the stored route data those trains with direction **Tampere → Lempäälä**. **Filtering:** the return-train list shows only trains whose **scheduled departure time is later** than the selected outbound train’s scheduled departure time (same day; compare using `scheduledDeparture`). Thus the return train always departs after the outbound train.
+- **Outbound train:** One dropdown (select). Options = from the stored route data (see §6) those trains with direction **Lempäälä → Tampere** (only trains that stop at Lempäälä and have a departure time from Lempäälä). Options are ordered by scheduled departure time (earliest first). The user selects the outbound (morning) train to track.
+- **Return train:** A second dropdown. Options = from the stored route data those trains with direction **Tampere → Lempäälä** (only trains that stop at Lempäälä, i.e. that the user can alight at Lempäälä). **Filtering:** the return-train list shows only trains whose **scheduled departure time is later** than the selected outbound train’s scheduled departure time (same day; compare using `scheduledDeparture`). Thus the return train always departs after the outbound train.
 - **Data source:** Options are read from stored route data (localStorage key `train:route:today:{date}`; typically use today’s date). Data is `RouteTrainInfo[]` (trainNumber, stationName, scheduledDeparture, direction).
 - **Display format:** Each option is shown as **hh:mm (train number)**. Example: `08:20 (1719)`, `16:35 (9700)`. Time is derived from `scheduledDeparture` (ISO) in Finnish timezone, 24h format.
-- **When route data is missing:** If no route data is available (e.g. first visit or fetch not yet run), use default train numbers 1719 (outbound) and 9700 (return) as today; the selects may be disabled or show "Ei reittidataa" until data exists.
+- **When route data is missing:** If no route data is available (e.g. first visit or fetch not yet run), use default train numbers 1719 (outbound) and 9700 (return) as today; the selects may be disabled or show "No route data" until data exists.
 
 ### 2. Summary View
 
-Display two summary cards: the first for the **selected outbound train** (lähtöjuna), the second for the **selected return train** (paluujuna). Each card shows:
+Display two summary cards: the first for the **selected outbound train**, the second for the **selected return train**. Each card shows:
 
 - **On-time percentage**: Percentage of trains with **≤1 min** delay. **Denominator:** all trains in the range for that train (including cancelled), so `onTimeCount / totalCount * 100`.
 - **Slight delay percentage**: Trains with **2–5** minutes delay (same denominator).
@@ -83,7 +83,7 @@ A table showing all data points with columns:
 
 ### 6. Local Storage (caching)
 
-- The app may perform a one-time background fetch of today’s route trains and store them locally; no user action is required and this does not change the main "Fetch Data" flow. This fetch uses a **single** GraphQL query filtered by **station name** "Lempäälä" (trains whose route contains Lempäälä). **All** trains returned by the query are stored (no filtering by departure station). For each train, the departure station (Lempäälä or Tampere asema) is derived by comparing the two DEPARTURE times and taking the **earlier** one as the train’s departure on this route; the stored record includes train number, station name, scheduled departure time, and a **direction** (or equivalent) indicating whether the train runs Lempäälä → Tampere or Tampere → Lempäälä. Both directions are stored. These data will be used in the application later.
+- The app may perform a one-time background fetch of today’s route trains and store them locally; no user action is required and this does not change the main "Fetch Data" flow. This fetch uses a **single** GraphQL query filtered by **station name** "Lempäälä" (trains whose route contains Lempäälä). Only trains that **stop at Lempäälä** (Digitraffic `trainStopping` true at Lempäälä) are stored; trains that pass through Lempäälä without stopping are excluded. For each stored train, the departure station (Lempäälä or Tampere asema) is derived by comparing the two DEPARTURE times and taking the **earlier** one as the train’s departure on this route; the stored record includes train number, station name, scheduled departure time, and a **direction** (or equivalent) indicating whether the train runs Lempäälä → Tampere or Tampere → Lempäälä. Both directions are stored. These data are used for the train selection dropdowns.
 - **Store** fetched train data in the browser’s local storage, keyed by date and train number.
 - **Do not store** data for the current date (today); today’s data is never written to local storage.
 - **Use stored data** when the user requests data for a given date and train: if a valid entry exists in local storage for that date and train, use it and do not call the API.
@@ -141,7 +141,7 @@ const TRAINS = {
 };
 ```
 
-The app supports **either** fixed train numbers (1719, 9700) **or** user-selected trains from the route data. When route data exists, the two selects (lähtöjuna, paluujuna) supply the train numbers used for Fetch, Summary, Timeline, and Table; when route data is missing, defaults 1719 (outbound) and 9700 (return) are used. The one-time GraphQL route fetch (see §6) uses a single query (trains containing Lempäälä) and stores **all** returned trains; both directions are included. Each stored record includes a direction field derived from which departure time is earlier.
+The app supports **either** fixed train numbers (1719, 9700) **or** user-selected trains from the route data. When route data exists, the two selects (Outbound train, Return train) supply the train numbers used for Fetch, Summary, Timeline, and Table; default selection is 1719 (outbound) and 9700 (return) when those trains appear in the options, otherwise the first option in each list. When route data is missing, defaults 1719 (outbound) and 9700 (return) are used. The one-time GraphQL route fetch (see §6) uses a single query (trains containing Lempäälä) and stores only trains that **stop at Lempäälä** (trainStopping true at Lempäälä); both directions are included. Each stored record includes a direction field derived from which departure time is earlier.
 
 ### Route data (one-time fetch)
 
@@ -150,7 +150,7 @@ Stored route items (e.g. `RouteTrainInfo`) include at least: **train number**, *
 ## User interface
 
 - **Header:** Title "🚂 Commute Punctuality", subtitle "Lempäälä ↔ Tampere" (use this exact wording).
-- **Single-page:** header, date range picker, **two selects** (Lähtöjuna, Paluujuna) with options in format hh:mm (train number), a “Fetch” button, **tab navigation** (Summary | Timeline | Table), and a content area that shows one of the three views. Data is fetched only when the user clicks Fetch (no automatic fetch on load). Footer text: "Data: Digitraffic / Fintraffic • Weekdays only".
+- **Single-page:** header, date range picker, **two selects** (Outbound train, Return train) with options in format hh:mm (train number), a “Fetch” button, **tab navigation** (Summary | Timeline | Table), and a content area that shows one of the three views. Data is fetched only when the user clicks Fetch (no automatic fetch on load). Footer text: "Data: Digitraffic / Fintraffic • Weekdays only".
 - **Summary**: Two cards (selected outbound train, selected return train) with statistics and a proportion bar. Headings use the selected train's departure time and number, e.g. "08:20 (1719) – Lempäälä → Tampere".
 - **Timeline**: Day-by-day colored cells for the selected outbound and return trains.
 - **Table**: Sortable list of all records for the two selected trains.

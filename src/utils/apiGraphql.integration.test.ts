@@ -1,5 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { fetchRouteTodayGraphQL } from "./apiGraphql";
+import { fetchRouteTodayGraphQL, buildRouteQuery } from "./apiGraphql";
+
+/** Mock timeTableRow shape; trainStopping must be true at Lempäälä for train to be included. */
+type MockRow = {
+  type: string;
+  scheduledTime: string;
+  station: { name: string };
+  trainStopping?: boolean;
+};
+
+/** Mock train shape: trainType is object { name } per GraphQL TrainType type. */
+const mockTrain = (
+  trainNumber: number,
+  trainTypeName: string,
+  timeTableRows: MockRow[]
+) => ({ trainNumber, trainType: { name: trainTypeName }, timeTableRows });
 
 /**
  * Integration test: verifies that the minimal GraphQL query and response parsing
@@ -10,20 +25,14 @@ describe("apiGraphql integration", () => {
   const mockTrainsByDepartureDate = {
     data: {
       trainsByDepartureDate: [
-        {
-          trainNumber: 1719,
-          timeTableRows: [
-            { type: "DEPARTURE", scheduledTime: "2026-01-29T06:20:00.000Z", station: { name: "Lempäälä" } },
-            { type: "ARRIVAL", scheduledTime: "2026-01-29T06:35:00.000Z", station: { name: "Tampere asema" } },
-          ],
-        },
-        {
-          trainNumber: 9700,
-          timeTableRows: [
-            { type: "DEPARTURE", scheduledTime: "2026-01-29T14:35:00.000Z", station: { name: "Tampere asema" } },
-            { type: "ARRIVAL", scheduledTime: "2026-01-29T14:52:00.000Z", station: { name: "Lempäälä" } },
-          ],
-        },
+        mockTrain(1719, "HL", [
+          { type: "DEPARTURE", scheduledTime: "2026-01-29T06:20:00.000Z", station: { name: "Lempäälä" }, trainStopping: true },
+          { type: "ARRIVAL", scheduledTime: "2026-01-29T06:35:00.000Z", station: { name: "Tampere asema" } },
+        ]),
+        mockTrain(9700, "HL", [
+          { type: "DEPARTURE", scheduledTime: "2026-01-29T14:35:00.000Z", station: { name: "Tampere asema" } },
+          { type: "ARRIVAL", scheduledTime: "2026-01-29T14:52:00.000Z", station: { name: "Lempäälä" }, trainStopping: true },
+        ]),
       ],
     },
   };
@@ -43,6 +52,22 @@ describe("apiGraphql integration", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("buildRouteQuery produces valid GraphQL with trainType subselection, station filters, and trainStopping", () => {
+    const date = "2026-01-29";
+    const query = buildRouteQuery(date);
+
+    expect(query).toContain("query RouteToday");
+    expect(query).toContain("trainsByDepartureDate");
+    expect(query).toContain(`departureDate: "${date}"`);
+    expect(query).toContain("trainType { name }");
+    expect(query).toContain("timeTableRows(");
+    expect(query).toContain("Lempäälä");
+    expect(query).toContain("Tampere asema");
+    expect(query).toContain("trainNumber");
+    expect(query).toContain("orderBy: { trainNumber: ASCENDING }");
+    expect(query).toContain("trainStopping");
   });
 
   it(
@@ -80,6 +105,66 @@ describe("apiGraphql integration", () => {
       }
     }
   );
+
+  it("filters out trains whose trainType.name is not in ALLOWED_TRAIN_TYPES", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((_url: string, _opts?: { body?: string }) => {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              data: {
+                trainsByDepartureDate: [
+                  mockTrain(1719, "HL", [
+                    { type: "DEPARTURE", scheduledTime: "2026-01-29T06:20:00.000Z", station: { name: "Lempäälä" }, trainStopping: true },
+                    { type: "ARRIVAL", scheduledTime: "2026-01-29T06:35:00.000Z", station: { name: "Tampere asema" } },
+                  ]),
+                  mockTrain(9999, "X", [
+                    { type: "DEPARTURE", scheduledTime: "2026-01-29T07:00:00.000Z", station: { name: "Lempäälä" }, trainStopping: true },
+                    { type: "ARRIVAL", scheduledTime: "2026-01-29T07:15:00.000Z", station: { name: "Tampere asema" } },
+                  ]),
+                ],
+              },
+            }),
+        });
+      })
+    );
+    const result = await fetchRouteTodayGraphQL();
+    expect(result).toHaveLength(1);
+    expect(result[0]!.trainNumber).toBe(1719);
+    vi.unstubAllGlobals();
+  });
+
+  it("excludes trains that pass through Lempäälä without stopping (trainStopping false at Lempäälä)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((_url: string, _opts?: { body?: string }) => {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              data: {
+                trainsByDepartureDate: [
+                  mockTrain(1719, "HL", [
+                    { type: "DEPARTURE", scheduledTime: "2026-01-29T06:20:00.000Z", station: { name: "Lempäälä" }, trainStopping: true },
+                    { type: "ARRIVAL", scheduledTime: "2026-01-29T06:35:00.000Z", station: { name: "Tampere asema" } },
+                  ]),
+                  mockTrain(8000, "HL", [
+                    { type: "DEPARTURE", scheduledTime: "2026-01-29T07:00:00.000Z", station: { name: "Lempäälä" }, trainStopping: false },
+                    { type: "ARRIVAL", scheduledTime: "2026-01-29T07:15:00.000Z", station: { name: "Tampere asema" } },
+                  ]),
+                ],
+              },
+            }),
+        });
+      })
+    );
+    const result = await fetchRouteTodayGraphQL();
+    expect(result).toHaveLength(1);
+    expect(result[0]!.trainNumber).toBe(1719);
+    vi.unstubAllGlobals();
+  });
 
   it(
     "fetchRouteTodayGraphQL succeeds against real API and returns minimal shape",

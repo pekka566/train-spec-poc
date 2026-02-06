@@ -40,6 +40,12 @@ src/
 - **Testing**: Vitest with jsdom, React Testing Library, setup in `src/test/setup.ts`
 - **Styling**: Mantine components and theme (no custom CSS files needed)
 
+### After every change
+
+- **Run all tests** and ensure they pass: `pnpm test -- --run`
+- **Run build** and ensure it succeeds: `pnpm build`
+- Do not consider a change complete until both tests and build pass.
+
 ## Domain Knowledge
 
 ### Trains
@@ -53,10 +59,17 @@ src/
 - `CANCELLED`: train cancelled
 
 ### API
-- **Endpoint**: `GET https://rata.digitraffic.fi/api/v1/trains/{date}/{trainNumber}`
+- **REST (single train)**: `GET https://rata.digitraffic.fi/api/v1/trains/{date}/{trainNumber}`
 - **Date format**: YYYY-MM-DD
 - **Times**: API returns UTC, display in Europe/Helsinki timezone
 - **Max API calls**: 30 per fetch (enforced before fetching)
+
+### GraphQL (route fetch)
+- **Usage**: Run once per day to fetch today's route trains (Lempäälä–Tampere) for the train selection dropdowns; implementation in `src/utils/apiGraphql.ts`.
+- **Endpoint**: `POST https://rata.digitraffic.fi/api/v2/graphql/graphql`, headers `Content-Type: application/json`, `Accept-Encoding: gzip`.
+- **Query**: `trainsByDepartureDate(departureDate, where: …)`; request `trainNumber`, `trainType.name`, `timeTableRows(where: Lempäälä or Tampere asema)` including `type`, `scheduledTime`, `station { name }`, `trainStopping`. Only trains with a stop at Lempäälä (`trainStopping === true`) are stored.
+- **API documentation**: [Digitraffic – Railway traffic](https://www.digitraffic.fi/rautatieliikenne/) (REST APIs → GraphQL, Train data, Response types → Trains / timeTableRows).
+- **Try queries**: [GraphiQL](https://rata.digitraffic.fi/api/v2/graphql/graphiql).
 
 ### Local Storage
 - Key format: `train:{date}:{trainNumber}`

@@ -25,7 +25,7 @@ describe("SummaryCard", () => {
     render(
       <SummaryCard train={TRAINS.morning} summary={createSummary()} variant="morning" />
     );
-    expect(screen.getByText(/Morning Train 8:20/)).toBeInTheDocument();
+    expect(screen.getByText(/Morning train 8:20/)).toBeInTheDocument();
     expect(screen.getByText(/Lempäälä → Tampere/)).toBeInTheDocument();
   });
 
@@ -33,7 +33,7 @@ describe("SummaryCard", () => {
     render(
       <SummaryCard train={TRAINS.evening} summary={createSummary()} variant="evening" />
     );
-    expect(screen.getByText(/Evening Train 16:35/)).toBeInTheDocument();
+    expect(screen.getByText(/Evening train 16:35/)).toBeInTheDocument();
   });
 
   it("displays on-time percentage and average delay", () => {

@@ -17,9 +17,9 @@ This document defines the **visual design** of the application: layout, componen
 ### Overall Layout Structure
 
 **Train selection (two dropdowns):**
-- **Lähtöjuna (outbound):** Label e.g. "Lähtöjuna" or "Aamujuna"; options shown as **hh:mm (train number)** (e.g. 08:20 (1719)). Options from route data, direction Lempäälä → Tampere, sorted by departure time.
-- **Paluujuna (return):** Label "Paluujuna" or "Iltapäiväjuna"; same format hh:mm (numero). Options from route data, direction Tampere → Lempäälä; **list is filtered** so only trains with departure time **after** the selected outbound are shown.
-- **Placement:** Same row as Start date, End date, and Fetch Data, or on a second row below. Order: Start date, End date, Lähtöjuna, Paluujuna, Fetch Data.
+- **Outbound train:** Label "Outbound train"; options shown as **hh:mm (train number)** (e.g. 08:20 (1719)). Options from route data: only trains that **stop at Lempäälä**, direction Lempäälä → Tampere, sorted by departure time.
+- **Return train:** Label "Return train"; same format hh:mm (train number). Options from route data: only trains that **stop at Lempäälä**, direction Tampere → Lempäälä; **list is filtered** so only trains with departure time **after** the selected outbound are shown.
+- **Placement:** Same row as Start date, End date, and Fetch Data, or on a second row below. Order: Start date, End date, Outbound train, Return train, Fetch Data.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -30,11 +30,12 @@ This document defines the **visual design** of the application: layout, componen
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │   ┌─────────────┐ ┌─────────────┐ ┌──────────────────┐ ┌──────────────────┐ ┌─────────────────┐
-│   │ Start date  │ │  End date   │ │ Lähtöjuna        │ │ Paluujuna        │ │ 🔍 Fetch Data   │
+│   │ Start date  │ │  End date   │ │ Outbound train   │ │ Return train     │ │ 🔍 Fetch Data   │
 │   │ 2026-01-15  │ │ 2026-01-29  │ │ 08:20 (1719)  ▼  │ │ 16:35 (9700)  ▼  │ │                 │
 │   └─────────────┘ └─────────────┘ └──────────────────┘ └──────────────────┘ └─────────────────┘
-│   Outbound options: hh:mm (train number), Lempäälä → Tampere. Return options: same format,
-│   Tampere → Lempäälä; return list is filtered to trains departing after the selected outbound.
+│   Outbound options: hh:mm (train number), Lempäälä → Tampere (trains that stop at Lempäälä only).
+│   Return options: same format, Tampere → Lempäälä (trains that stop at Lempäälä); return list
+│   filtered to trains departing after the selected outbound.
 │   (App may show "too many API calls" error if range would require more than 30 API calls.)   │
 │                                                                 │
 ├─────────────────────────────────────────────────────────────────┤
@@ -188,10 +189,10 @@ Table features:
 │ │ 2026-01-15│ 2026-01-29│ │
 │ └───────────────────────┘ │
 │ ┌───────────────────────┐ │
-│ │ Lähtöjuna  08:20 (1719)▼│
+│ │ Outbound train 08:20 (1719)▼│
 │ └───────────────────────┘ │
 │ ┌───────────────────────┐ │
-│ │ Paluujuna 16:35 (9700)▼│
+│ │ Return train 16:35 (9700)▼│
 │ └───────────────────────┘ │
 │ ┌───────────────────────┐ │
 │ │     🔍 Fetch Data     │ │
@@ -228,7 +229,7 @@ Table features:
 
 Mobile adaptations:
 - Cards stack vertically
-- Date inputs on same row; train selects (Lähtöjuna, Paluujuna) stacked vertically or in two columns—no horizontal overflow of the full page
+- Date inputs on same row; train selects (Outbound train, Return train) stacked vertically or in two columns—no horizontal overflow of the full page
 - Fetch button below selects
 - Tab labels abbreviated or icon-only
 - Table becomes horizontally scrollable
@@ -299,7 +300,7 @@ When the selected date range would require more than 30 API calls (based on what
 
 ### No route data (train selects)
 
-When route data is not available (e.g. first visit or route fetch has not run), the train selection dropdowns are **disabled** and show the text **"Ei reittidataa"** (or a single default option). The app uses default train numbers (1719 outbound, 9700 return) for Fetch and all views until route data exists; then the selects are populated from `train:route:today:{date}` and the user can choose trains. Document in implementation which behaviour is used (disabled + "Ei reittidataa" vs. fixed 1719/9700 with no other options).
+When route data is not available (e.g. first visit or route fetch has not run), the train selection dropdowns are **disabled** and show the text **"No route data"** (or a single default option). The app uses default train numbers (1719 outbound, 9700 return) for Fetch and all views until route data exists; then the selects are populated from `train:route:today:{date}` and the user can choose trains. When route data exists, default selection is 1719 (outbound) and 9700 (return) when those trains appear in the options, otherwise the first option in each list.
 
 ---
 

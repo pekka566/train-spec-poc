@@ -27,6 +27,9 @@ function optionLabel(t: RouteTrainInfo): string {
   return `${formatFinnishTime(t.scheduledDeparture)} (${t.trainNumber})`;
 }
 
+const byTime = (a: RouteTrainInfo, b: RouteTrainInfo) =>
+  a.scheduledDeparture.localeCompare(b.scheduledDeparture);
+
 export function DateRangePicker({
   startDate,
   endDate,
@@ -59,14 +62,18 @@ export function DateRangePicker({
     }
   };
 
-  const outboundData = outboundOptions.map((t) => ({
-    value: String(t.trainNumber),
-    label: optionLabel(t),
-  }));
-  const returnData = returnOptions.map((t) => ({
-    value: String(t.trainNumber),
-    label: optionLabel(t),
-  }));
+  const outboundData = [...outboundOptions]
+    .sort(byTime)
+    .map((t) => ({
+      value: String(t.trainNumber),
+      label: optionLabel(t),
+    }));
+  const returnData = [...returnOptions]
+    .sort(byTime)
+    .map((t) => ({
+      value: String(t.trainNumber),
+      label: optionLabel(t),
+    }));
 
   return (
     <Stack gap="xs">
@@ -90,8 +97,8 @@ export function DateRangePicker({
           style={{ flex: 1, minWidth: 140 }}
         />
         <Select
-          label="Lähtöjuna"
-          placeholder={noRouteData ? "Ei reittidataa" : undefined}
+          label="Outbound train"
+          placeholder={noRouteData ? "No route data" : undefined}
           data={outboundData}
           value={selectedOutbound ? String(selectedOutbound.trainNumber) : null}
           onChange={(value) => {
@@ -106,8 +113,8 @@ export function DateRangePicker({
           style={{ minWidth: 140 }}
         />
         <Select
-          label="Paluujuna"
-          placeholder={noRouteData ? "Ei reittidataa" : undefined}
+          label="Return train"
+          placeholder={noRouteData ? "No route data" : undefined}
           data={returnData}
           value={selectedReturn ? String(selectedReturn.trainNumber) : null}
           onChange={(value) => {

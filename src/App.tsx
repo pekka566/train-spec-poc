@@ -26,7 +26,11 @@ import {
   filterReturnOptions,
   type RouteTrainInfo,
 } from "@/utils/apiGraphql";
-import { getDefaultDateRange, getTodayFinnish, formatFinnishTime } from "@/utils/dateUtils";
+import {
+  getDefaultDateRange,
+  getTodayFinnish,
+  formatFinnishTime,
+} from "@/utils/dateUtils";
 import { computeSummary, filterByTrain } from "@/utils/statsCalculator";
 import { TRAINS, type TrainConfig } from "@/types/train";
 import type { TrainNumbers } from "@/utils/trainStorage";
@@ -51,29 +55,39 @@ function App() {
   const [endDate, setEndDate] = useState(defaultRange.endDate);
   const [activeTab, setActiveTab] = useState<TabValue>("summary");
   const routeFetchStartedRef = useRef(false);
+  const [routeStorageRevision, setRouteStorageRevision] = useState(0);
   const today = getTodayFinnish();
 
   const routeStorage = useMemo(
     () => getRouteTodayFromStorage(today),
-    [today]
+    [today, routeStorageRevision],
   );
   const { outbound: outboundList, return: returnList } = useMemo(() => {
     if (!routeStorage?.trains?.length) return { outbound: [], return: [] };
     return getRouteTrainsByDirection(routeStorage.trains);
   }, [routeStorage]);
 
-  const [selectedOutbound, setSelectedOutbound] = useState<RouteTrainInfo | null>(null);
-  const [selectedReturn, setSelectedReturn] = useState<RouteTrainInfo | null>(null);
+  const [selectedOutbound, setSelectedOutbound] =
+    useState<RouteTrainInfo | null>(null);
+  const [selectedReturn, setSelectedReturn] = useState<RouteTrainInfo | null>(
+    null,
+  );
 
   useEffect(() => {
     if (routeFetchStartedRef.current) return;
     routeFetchStartedRef.current = true;
-    runRouteFetchOnce();
+    runRouteFetchOnce().then(() =>
+      setRouteStorageRevision((r) => r + 1),
+    );
   }, []);
 
   useEffect(() => {
     if (outboundList.length > 0 && !selectedOutbound) {
-      setSelectedOutbound(outboundList[0]);
+      setSelectedOutbound(
+        outboundList.find((t) => t.trainNumber === TRAINS.morning.number) ??
+          outboundList[0] ??
+          null,
+      );
     }
   }, [outboundList, selectedOutbound]);
 
@@ -90,7 +104,11 @@ function App() {
         selectedReturn &&
         returnOptions.some((t) => t.trainNumber === selectedReturn.trainNumber);
       if (!stillValid) {
-        setSelectedReturn(returnOptions[0]);
+        setSelectedReturn(
+          returnOptions.find((t) => t.trainNumber === TRAINS.evening.number) ??
+            returnOptions[0] ??
+            null,
+        );
       }
     }
   }, [returnOptions, selectedReturn]);
@@ -180,12 +198,7 @@ function App() {
     // Show empty state if no data after fetch
     if (hasFetched && data.length === 0) {
       return (
-        <Center
-          py="xl"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
+        <Center py="xl" role="status" aria-live="polite" aria-atomic="true">
           <Stack align="center" gap="sm">
             <IconInbox size={48} color="gray" aria-hidden />
             <Text c="dimmed">No data</Text>
@@ -202,12 +215,7 @@ function App() {
     // Show initial state before fetch
     if (!hasFetched) {
       return (
-        <Center
-          py="xl"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
+        <Center py="xl" role="status" aria-live="polite" aria-atomic="true">
           <Text c="dimmed">
             Select a date range and click "Fetch Data" to load train data.
           </Text>

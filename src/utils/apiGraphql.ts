@@ -7,6 +7,30 @@ const GRAPHQL_URL = "https://rata.digitraffic.fi/api/v2/graphql/graphql";
 const STATION_LEMPÄÄLÄ = "Lempäälä";
 const STATION_TAMPERE = "Tampere asema";
 
+/**
+ * Train types to include: Commuter (HL, HV, HLV) and Long-distance (H, PVS, P, HDM, PVV, S, V, IC2, IC, HSM, AE, PYO, MV, MUS).
+ * Source: https://rata.digitraffic.fi/api/v1/metadata/train-types (categories "Commuter" and "Long-distance").
+ */
+const ALLOWED_TRAIN_TYPES = [
+  "HL",
+  "HV",
+  "HLV",
+  "H",
+  "PVS",
+  "P",
+  "HDM",
+  "PVV",
+  "S",
+  "V",
+  "IC2",
+  "IC",
+  "HSM",
+  "AE",
+  "PYO",
+  "MV",
+  "MUS",
+];
+
 /** Direction on the Lempäälä–Tampere route. */
 export type RouteDirection = "Lempäälä → Tampere" | "Tampere → Lempäälä";
 
@@ -18,16 +42,18 @@ export interface RouteTrainInfo {
   direction: RouteDirection;
 }
 
-/** GraphQL timeTableRow shape (minimal: type, scheduledTime, station name only). */
+/** GraphQL timeTableRow shape (minimal: type, scheduledTime, station name, trainStopping). */
 interface GraphQLTimeTableRow {
   type: string;
   scheduledTime: string;
   station?: { name: string } | null;
+  trainStopping?: boolean;
 }
 
-/** GraphQL train node shape (minimal query). */
+/** GraphQL train node shape (minimal query). trainType is object with name (TrainType! in schema). */
 interface GraphQLTrain {
   trainNumber: number;
+  trainType?: { name: string } | null;
   timeTableRows?: GraphQLTimeTableRow[] | null;
 }
 
@@ -68,8 +94,8 @@ function getDepartureAndDirection(
   return null;
 }
 
-/** Build minimal query: single query filtered by Lempäälä, request trainNumber + timeTableRows for Lempäälä/Tampere. */
-function buildRouteQuery(date: string): string {
+/** Build minimal query: single query filtered by Lempäälä, request trainNumber, trainType.name, timeTableRows for Lempäälä/Tampere. */
+export function buildRouteQuery(date: string): string {
   return `query RouteToday {
   trainsByDepartureDate(
     departureDate: "${date}",
@@ -77,10 +103,12 @@ function buildRouteQuery(date: string): string {
     orderBy: { trainNumber: ASCENDING }
   ) {
     trainNumber
+    trainType { name }
     timeTableRows(${TIME_TABLE_ROWS_WHERE}) {
       type
       scheduledTime
       station { name }
+      trainStopping
     }
   }
 }`;
@@ -88,7 +116,7 @@ function buildRouteQuery(date: string): string {
 
 /**
  * Fetch trains for Lempäälä–Tampere route for today via GraphQL v2 (single query).
- * Returns all trains that pass through Lempäälä (both directions). Direction is derived from which departure (Lempäälä or Tampere) is earlier.
+ * Returns only trains that stop at Lempäälä (trainStopping === true at Lempäälä). Direction is derived from which departure (Lempäälä or Tampere) is earlier.
  */
 export async function fetchRouteTodayGraphQL(): Promise<RouteTrainInfo[]> {
   const date = getTodayFinnish();
@@ -116,11 +144,19 @@ export async function fetchRouteTodayGraphQL(): Promise<RouteTrainInfo[]> {
     throw new Error(json.errors.map((e) => e.message).join("; "));
   }
 
-  const trains = json.data?.trainsByDepartureDate ?? [];
+  const rawTrains = json.data?.trainsByDepartureDate ?? [];
+  const trains = rawTrains.filter(
+    (t) => t.trainType?.name != null && ALLOWED_TRAIN_TYPES.includes(t.trainType.name)
+  );
   const result: RouteTrainInfo[] = [];
 
   for (const g of trains) {
     const rows = g.timeTableRows ?? [];
+    const stopsAtLempäälä = rows.some(
+      (r) => r.station?.name === STATION_LEMPÄÄLÄ && r.trainStopping === true
+    );
+    if (!stopsAtLempäälä) continue;
+
     const info = getDepartureAndDirection(rows);
     if (!info) continue;
 
