@@ -109,4 +109,13 @@ describe("Timeline", () => {
       screen.getByText(/Evening train 16:35 [–-] Tampere → Lempäälä/)
     ).toBeInTheDocument();
   });
+
+  it("does not render train title when hideTitle is true", () => {
+    render(
+      <Timeline train={TRAINS.morning} records={[]} hideTitle />
+    );
+    expect(
+      screen.queryByText(/Morning train 8:20 [–-] Lempäälä → Tampere/)
+    ).not.toBeInTheDocument();
+  });
 });

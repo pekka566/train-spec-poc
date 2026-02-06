@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import type { TrainRecord, TrainConfig } from "@/types/train";
 import { formatFinnishDate, formatFinnishTime } from "@/utils/dateUtils";
+import { getTrainTitle } from "@/utils/trainUtils";
 import { sortByDate } from "@/utils/statsCalculator";
 
 interface DataTableProps {
@@ -45,9 +46,7 @@ export function DataTable({ train, records }: DataTableProps) {
     <Card shadow="sm" padding="lg" radius="md" withBorder>
       <Stack gap="md">
         <Title order={2} size="h4" fw={600}>
-          {train.name.includes("(")
-            ? `${train.name} – ${train.direction}`
-            : `${train.name} ${train.scheduledTime} – ${train.direction}`}
+          {getTrainTitle(train)}
         </Title>
 
         <ScrollArea>

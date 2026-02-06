@@ -8,6 +8,7 @@ import {
   Box,
 } from "@mantine/core";
 import type { TrainSummary, TrainConfig } from "@/types/train";
+import { getTrainTitle } from "@/utils/trainUtils";
 import { StatusLegend, STATUS_LEGEND_ITEMS } from "./StatusLegend";
 
 const cardBackgroundColor = {
@@ -19,9 +20,16 @@ interface SummaryCardProps {
   train: TrainConfig;
   summary: TrainSummary;
   variant: "morning" | "evening";
+  /** When true, do not render the train line title (e.g. when used under a section header). */
+  hideTitle?: boolean;
 }
 
-export function SummaryCard({ train, summary, variant }: SummaryCardProps) {
+export function SummaryCard({
+  train,
+  summary,
+  variant,
+  hideTitle = false,
+}: SummaryCardProps) {
   return (
     <Card
       shadow="sm"
@@ -31,11 +39,11 @@ export function SummaryCard({ train, summary, variant }: SummaryCardProps) {
       style={{ backgroundColor: cardBackgroundColor[variant] }}
     >
       <Stack gap="md" style={{ color: "black" }}>
-        <Title order={2} size="h4" fw={600}>
-          {train.name.includes("(")
-            ? `${train.name} – ${train.direction}`
-            : `${train.name} ${train.scheduledTime} – ${train.direction}`}
-        </Title>
+        {!hideTitle && (
+          <Title order={2} size="h4" fw={600}>
+            {getTrainTitle(train)}
+          </Title>
+        )}
 
         <SimpleGrid cols={2} spacing="sm">
           <StatBox

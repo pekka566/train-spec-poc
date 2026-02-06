@@ -62,11 +62,9 @@ This document defines the **visual design** of the application: layout, componen
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
+│  08:20 (1719) – Lempäälä → Tampere    16:35 (9700) – Tampere → Lempäälä
+│                                                                 │
 │  ┌─────────────────────────────┐ ┌─────────────────────────────┐│
-│  │ ░░░░░░░░░░░░░░░░░░░░░░░░░░  │ │ ░░░░░░░░░░░░░░░░░░░░░░░░░░  ││
-│  │ ░ 08:20 (1719) – Lempäälä → Tampere  ░ │ │ ░ 16:35 (9700) – Tampere → Lempäälä ░ ││
-│  │ ░░░░░░░░░░░░░░░░░░░░░░░░░░  │ │ ░░░░░░░░░░░░░░░░░░░░░░░░░░  ││
-│  │                             │ │                             ││
 │  │  ┌───────────┬───────────┐  │ │  ┌───────────┬───────────┐  ││
 │  │  │    92%    │   1.2     │  │ │  │    87%    │   2.4     │  ││
 │  │  │  On Time  │  Avg Delay│  │ │  │  On Time  │  Avg Delay│  ││
@@ -81,25 +79,23 @@ This document defines the **visual design** of the application: layout, componen
 │  │                             │ │                             ││
 │  │  (orange/amber gradient)    │ │  (indigo/purple gradient)   ││
 │  └─────────────────────────────┘ └─────────────────────────────┘│
-│                                                                 │
 │  ┌─────────────────────────────┐ ┌─────────────────────────────┐│
-│  │ 08:20 (1719) – LPÄ→TPE      │ │ 16:35 (9700) – TPE→LPÄ       ││
 │  │ ┌──┐┌──┐┌──┐┌──┐ ...        │ │ ┌──┐┌──┐┌──┐┌──┐ ...        ││
 │  │ Legend: 🟢 🟡 🔴 ⬜         │ │ Legend: 🟢 🟡 🔴 ⬜         ││
 │  └─────────────────────────────┘ └─────────────────────────────┘│
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
-**Layout:** On desktop (md and up) the Summary tab uses a **two-column grid** for both the cards and the timelines: same grid so each timeline aligns under its card and has equal width. Row 1: two SummaryCards side-by-side. Row 2: two Timelines side-by-side, each **same width as the SummaryCard above it** (outbound timeline under outbound card, return timeline under return card). On mobile (base) both cards and timelines stack in a single column (order: outbound card, return card, outbound timeline, return timeline).
+**Layout:** On desktop (md and up) the Summary tab uses a **two-column grid**. Each column is one train: a **single section title** (train line, e.g. "08:20 (1719) – Lempäälä → Tampere"), then the Summary card (stats and progress), then the Timeline card (colored cells, legend). The train line is shown **once per train** as the section heading; the Summary and Timeline cards do not repeat it. On mobile (base) columns stack (order: outbound section, then return section).
 
-Card header: Same format and style as the Timeline title — one line combining departure time and number with direction (e.g. "08:20 (1719) – Lempäälä → Tampere"), so Summary cards and Timeline cards look consistent.
-Card content: First card = selected outbound train; second card = selected return train. Replace placeholder times/numbers with the user’s dropdown choices.
+Section title: Same format and style as before — one line combining departure time and number with direction (e.g. "08:20 (1719) – Lempäälä → Tampere").
+Card content: First column = selected outbound train; second column = selected return train. Replace placeholder times/numbers with the user’s dropdown choices.
 Card color coding:
 - First (outbound) card: Orange to Amber gradient background
 - Second (return) card: Indigo to Purple gradient background
 - Stats boxes: Semi-transparent white overlay
 
-Below the cards, the same two-column grid is used for the timelines: outbound timeline under the outbound card, return timeline under the return card, so each timeline has the same width as the card above it. Each timeline: row of colored cells (green/yellow/red/gray), legend, tooltip on hover.
+Each timeline: row of colored cells (green/yellow/red/gray), legend, tooltip on hover.
 ```
 
 ### Table View (second tab)

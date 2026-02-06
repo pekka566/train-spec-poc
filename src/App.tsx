@@ -32,6 +32,7 @@ import {
   formatFinnishTime,
 } from "@/utils/dateUtils";
 import { computeSummary, filterByTrain } from "@/utils/statsCalculator";
+import { getTrainTitle } from "@/utils/trainUtils";
 import { TRAINS, type TrainConfig } from "@/types/train";
 import type { TrainNumbers } from "@/utils/trainStorage";
 
@@ -227,24 +228,40 @@ function App() {
     switch (activeTab) {
       case "summary":
         return (
-          <Stack gap="lg">
-            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+            <Stack gap="lg">
+              <Title order={2} size="h4" fw={600}>
+                {getTrainTitle(morningTrainConfig)}
+              </Title>
               <SummaryCard
                 train={morningTrainConfig}
                 summary={morningSummary}
                 variant="morning"
+                hideTitle
               />
+              <Timeline
+                train={morningTrainConfig}
+                records={morningRecords}
+                hideTitle
+              />
+            </Stack>
+            <Stack gap="lg">
+              <Title order={2} size="h4" fw={600}>
+                {getTrainTitle(eveningTrainConfig)}
+              </Title>
               <SummaryCard
                 train={eveningTrainConfig}
                 summary={eveningSummary}
                 variant="evening"
+                hideTitle
               />
-            </SimpleGrid>
-            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
-              <Timeline train={morningTrainConfig} records={morningRecords} />
-              <Timeline train={eveningTrainConfig} records={eveningRecords} />
-            </SimpleGrid>
-          </Stack>
+              <Timeline
+                train={eveningTrainConfig}
+                records={eveningRecords}
+                hideTitle
+              />
+            </Stack>
+          </SimpleGrid>
         );
 
       case "table":

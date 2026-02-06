@@ -72,4 +72,16 @@ describe("SummaryCard", () => {
     expect(screen.getByText("2-5 min")).toBeInTheDocument();
     expect(screen.getByText(">5 min")).toBeInTheDocument();
   });
+
+  it("does not render train title when hideTitle is true", () => {
+    render(
+      <SummaryCard
+        train={TRAINS.morning}
+        summary={createSummary()}
+        variant="morning"
+        hideTitle
+      />
+    );
+    expect(screen.queryByText(/Morning train 8:20 – Lempäälä → Tampere/)).not.toBeInTheDocument();
+  });
 });
