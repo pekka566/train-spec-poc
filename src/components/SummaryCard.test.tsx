@@ -21,19 +21,22 @@ function createSummary(overrides: Partial<TrainSummary> = {}): TrainSummary {
 }
 
 describe("SummaryCard", () => {
-  it("renders morning train title and direction", () => {
+  it("renders morning train title and direction (same format as Timeline)", () => {
     render(
       <SummaryCard train={TRAINS.morning} summary={createSummary()} variant="morning" />
     );
-    expect(screen.getByText(/Morning train 8:20/)).toBeInTheDocument();
-    expect(screen.getByText(/Lempäälä → Tampere/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Morning train 8:20 – Lempäälä → Tampere/)
+    ).toBeInTheDocument();
   });
 
-  it("renders evening train title when variant is evening", () => {
+  it("renders evening train title when variant is evening (same format as Timeline)", () => {
     render(
       <SummaryCard train={TRAINS.evening} summary={createSummary()} variant="evening" />
     );
-    expect(screen.getByText(/Evening train 16:35/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Evening train 16:35 – Tampere → Lempäälä/)
+    ).toBeInTheDocument();
   });
 
   it("displays on-time percentage and average delay", () => {

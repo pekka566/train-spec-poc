@@ -33,9 +33,11 @@ As a daily commuter traveling between Lempäälä and Tampere, I want to track t
 - **Display format:** Each option is shown as **hh:mm (train number)**. Example: `08:20 (1719)`, `16:35 (9700)`. Time is derived from `scheduledDeparture` (ISO) in Finnish timezone, 24h format.
 - **When route data is missing:** If no route data is available (e.g. first visit or fetch not yet run), use default train numbers 1719 (outbound) and 9700 (return) as today; the selects may be disabled or show "No route data" until data exists.
 
-### 2. Summary View
+### 2. Summary and Timeline view
 
-Display two summary cards: the first for the **selected outbound train**, the second for the **selected return train**. Each card shows:
+The first tab shows both summary statistics and day-by-day timelines in one scrollable panel.
+
+**Summary cards:** Display two summary cards: the first for the **selected outbound train**, the second for the **selected return train**. Each card shows:
 
 - **On-time percentage**: Percentage of trains with **≤1 min** delay. **Denominator:** all trains in the range for that train (including cancelled), so `onTimeCount / totalCount * 100`.
 - **Slight delay percentage**: Trains with **2–5** minutes delay (same denominator).
@@ -44,9 +46,7 @@ Display two summary cards: the first for the **selected outbound train**, the se
 - **Average delay**: Mean delay in minutes over **non-cancelled** trains only (cancelled trains are excluded from this average).
 - **Visual bar**: Horizontal bar with segments proportional to on-time / slight delay / delayed / cancelled (same categories as above).
 
-### 3. Timeline View
-
-A visual day-by-day representation where each day is shown as a colored cell:
+**Timelines:** Below the cards, a visual day-by-day representation where each day is shown as a colored cell:
 
 | Color | Status |
 |-------|--------|
@@ -57,7 +57,7 @@ A visual day-by-day representation where each day is shown as a colored cell:
 
 Cells should show the delay amount on hover or inside the cell. Display timelines for both the selected outbound train and the selected return train.
 
-### 4. Detail Table View
+### 3. Detail Table View
 
 A table showing all data points with columns:
 
@@ -73,7 +73,7 @@ A table showing all data points with columns:
 - **Sortable:** At least the Date column must be sortable; others optional. **Default sort:** newest first (date descending).
 - **Layout:** Either one combined table with a Train column, or two separate table sections (selected outbound train, selected return train) as in the visual spec wireframes.
 
-### 5. Data Fetching
+### 4. Data Fetching
 
 - When the user clicks "Fetch", the trains to fetch are the **selected outbound** and **selected return** train numbers (from the two selects). Compute **needed API calls** from the selected date range and current local storage: for each weekday in range (end not in future) and each of these two train numbers, count 1 if that (date, trainNumber) is not in storage or is today. If **needed API calls > 30**, show an error message and **do not perform any API requests**. If **needed API calls ≤ 30**, proceed to fetch only for (date, trainNumber) that require an API call (today or not in storage).
 - Fetch data for each (date, trainNumber) that needs it by calling the API with the specific train number.
@@ -81,7 +81,7 @@ A table showing all data points with columns:
 - Handle errors gracefully (network errors, missing data).
 - For dates where no data is returned, skip silently (train may not run on that date).
 
-### 6. Local Storage (caching)
+### 5. Local Storage (caching)
 
 - The app may perform a one-time background fetch of today’s route trains and store them locally; no user action is required and this does not change the main "Fetch Data" flow. This fetch uses a **single** GraphQL query filtered by **station name** "Lempäälä" (trains whose route contains Lempäälä). Only trains that **stop at Lempäälä** (Digitraffic `trainStopping` true at Lempäälä) are stored; trains that pass through Lempäälä without stopping are excluded. For each stored train, the departure station (Lempäälä or Tampere asema) is derived by comparing the two DEPARTURE times and taking the **earlier** one as the train’s departure on this route; the stored record includes train number, station name, scheduled departure time, and a **direction** (or equivalent) indicating whether the train runs Lempäälä → Tampere or Tampere → Lempäälä. Both directions are stored. These data are used for the train selection dropdowns.
 - **Store** fetched train data in the browser’s local storage, keyed by date and train number.
@@ -141,7 +141,7 @@ const TRAINS = {
 };
 ```
 
-The app supports **either** fixed train numbers (1719, 9700) **or** user-selected trains from the route data. When route data exists, the two selects (Outbound train, Return train) supply the train numbers used for Fetch, Summary, Timeline, and Table; default selection is 1719 (outbound) and 9700 (return) when those trains appear in the options, otherwise the first option in each list. When route data is missing, defaults 1719 (outbound) and 9700 (return) are used. The one-time GraphQL route fetch (see §6) uses a single query (trains containing Lempäälä) and stores only trains that **stop at Lempäälä** (trainStopping true at Lempäälä); both directions are included. Each stored record includes a direction field derived from which departure time is earlier.
+The app supports **either** fixed train numbers (1719, 9700) **or** user-selected trains from the route data. When route data exists, the two selects (Outbound train, Return train) supply the train numbers used for Fetch, Summary, and Table; default selection is 1719 (outbound) and 9700 (return) when those trains appear in the options, otherwise the first option in each list. When route data is missing, defaults 1719 (outbound) and 9700 (return) are used. The one-time GraphQL route fetch (see §5) uses a single query (trains containing Lempäälä) and stores only trains that **stop at Lempäälä** (trainStopping true at Lempäälä); both directions are included. Each stored record includes a direction field derived from which departure time is earlier.
 
 ### Route data (one-time fetch)
 
@@ -150,9 +150,8 @@ Stored route items (e.g. `RouteTrainInfo`) include at least: **train number**, *
 ## User interface
 
 - **Header:** Title "🚂 Commute Punctuality", subtitle "Lempäälä ↔ Tampere" (use this exact wording).
-- **Single-page:** header, date range picker, **two selects** (Outbound train, Return train) with options in format hh:mm (train number), a “Fetch” button, **tab navigation** (Summary | Timeline | Table), and a content area that shows one of the three views. Data is fetched only when the user clicks Fetch (no automatic fetch on load). Footer text: "Data: Digitraffic / Fintraffic • Weekdays only".
-- **Summary**: Two cards (selected outbound train, selected return train) with statistics and a proportion bar. Headings use the selected train's departure time and number, e.g. "08:20 (1719) – Lempäälä → Tampere".
-- **Timeline**: Day-by-day colored cells for the selected outbound and return trains.
+- **Single-page:** header, date range picker, **two selects** (Outbound train, Return train) with options in format hh:mm (train number), a “Fetch” button, **tab navigation** (Summary | Table), and a content area that shows one of the two views. Data is fetched only when the user clicks Fetch (no automatic fetch on load). Footer text: "Data: Digitraffic / Fintraffic • Weekdays only".
+- **Summary**: Two cards (selected outbound train, selected return train) with statistics and a proportion bar, plus day-by-day colored timelines for both trains. Headings use the selected train's departure time and number, e.g. "08:20 (1719) – Lempäälä → Tampere".
 - **Table**: Sortable list of all records for the two selected trains.
 - **Loading and errors**: A loading indicator while data is fetched; an error message if the API fails; an empty state if no data for the range.
 - **Visual design** (layout, components, colors, responsive behaviour) is defined in [VISUAL-SPEC.md](VISUAL-SPEC.md).

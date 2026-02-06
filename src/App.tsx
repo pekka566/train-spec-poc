@@ -227,25 +227,23 @@ function App() {
     switch (activeTab) {
       case "summary":
         return (
-          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
-            <SummaryCard
-              train={morningTrainConfig}
-              summary={morningSummary}
-              variant="morning"
-            />
-            <SummaryCard
-              train={eveningTrainConfig}
-              summary={eveningSummary}
-              variant="evening"
-            />
-          </SimpleGrid>
-        );
-
-      case "timeline":
-        return (
           <Stack gap="lg">
-            <Timeline train={morningTrainConfig} records={morningRecords} />
-            <Timeline train={eveningTrainConfig} records={eveningRecords} />
+            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+              <SummaryCard
+                train={morningTrainConfig}
+                summary={morningSummary}
+                variant="morning"
+              />
+              <SummaryCard
+                train={eveningTrainConfig}
+                summary={eveningSummary}
+                variant="evening"
+              />
+            </SimpleGrid>
+            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+              <Timeline train={morningTrainConfig} records={morningRecords} />
+              <Timeline train={eveningTrainConfig} records={eveningRecords} />
+            </SimpleGrid>
           </Stack>
         );
 

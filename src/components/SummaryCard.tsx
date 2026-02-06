@@ -31,16 +31,11 @@ export function SummaryCard({ train, summary, variant }: SummaryCardProps) {
       style={{ backgroundColor: cardBackgroundColor[variant] }}
     >
       <Stack gap="md" style={{ color: "black" }}>
-        <Box>
-          <Title order={2} size="lg" fw={700} tt="uppercase">
-            {train.name.includes("(")
-              ? train.name
-              : `${train.name} ${train.scheduledTime}`}
-          </Title>
-          <Text size="sm" opacity={0.9}>
-            {train.direction}
-          </Text>
-        </Box>
+        <Title order={2} size="h4" fw={600}>
+          {train.name.includes("(")
+            ? `${train.name} – ${train.direction}`
+            : `${train.name} ${train.scheduledTime} – ${train.direction}`}
+        </Title>
 
         <SimpleGrid cols={2} spacing="sm">
           <StatBox

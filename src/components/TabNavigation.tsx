@@ -1,7 +1,7 @@
 import { Tabs } from "@mantine/core";
-import { IconChartBar, IconCalendar, IconTable } from "@tabler/icons-react";
+import { IconChartBar, IconTable } from "@tabler/icons-react";
 
-export type TabValue = "summary" | "timeline" | "table";
+export type TabValue = "summary" | "table";
 
 interface TabNavigationProps {
   activeTab: TabValue;
@@ -21,13 +21,6 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
           leftSection={<IconChartBar size={16} aria-hidden />}
         >
           Summary
-        </Tabs.Tab>
-        <Tabs.Tab
-          value="timeline"
-          id="tab-timeline"
-          leftSection={<IconCalendar size={16} aria-hidden />}
-        >
-          Timeline
         </Tabs.Tab>
         <Tabs.Tab
           value="table"
