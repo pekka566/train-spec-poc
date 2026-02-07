@@ -24,8 +24,8 @@ This document defines the **visual design** of the application: layout, componen
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
-│              🚂  Commute Punctuality                            │
-│                   Lempäälä ↔ Tampere                            │
+│                 Commute Punctuality                             │
+│                  Lempäälä - Tampere                              │
 │                                                                 │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
@@ -52,7 +52,7 @@ This document defines the **visual design** of the application: layout, componen
 │                                                                 │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│         Data: Digitraffic / Fintraffic • Weekdays only          │
+│         Data: Digitraffic / Fintraffic - Weekdays only          │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -77,7 +77,7 @@ This document defines the **visual design** of the application: layout, componen
 │  │  ████████████░░░░           │ │  ██████████░░░░░░           ││
 │  │  🟢 On time  🟡 2-5m  🔴 >5m│ │  🟢 On time  🟡 2-5m  🔴 >5m││
 │  │                             │ │                             ││
-│  │  (orange/amber gradient)    │ │  (indigo/purple gradient)   ││
+│  │  (lime-0 background)        │ │  (cyan-0 background)        ││
 │  └─────────────────────────────┘ └─────────────────────────────┘│
 │  ┌─────────────────────────────┐ ┌─────────────────────────────┐│
 │  │ ┌──┐┌──┐┌──┐┌──┐ ...        │ │ ┌──┐┌──┐┌──┐┌──┐ ...        ││
@@ -86,16 +86,22 @@ This document defines the **visual design** of the application: layout, componen
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 
-**Layout:** On desktop (md and up) the Summary tab uses a **two-column grid**. Each column is one train: a **single section title** (train line, e.g. "08:20 (1719) – Lempäälä → Tampere"), then the Summary card (stats and progress), then the Timeline card (colored cells, legend). The train line is shown **once per train** as the section heading; the Summary and Timeline cards do not repeat it. On mobile (base) columns stack (order: outbound section, then return section).
+**Layout:** On desktop (md and up) the Summary tab uses a **single two-column SimpleGrid** (`cols={{ base: 1, md: 2 }}`, `spacing="lg"`). Each column is a Stack containing: a **section title** (`Title order={2} size="h4"`), then the SummaryCard (with `hideTitle`), then the Timeline (with `hideTitle`). This groups each train's visuals in one column. On mobile (base) columns stack (order: outbound section, then return section).
 
-Section title: Same format and style as before — one line combining departure time and number with direction (e.g. "08:20 (1719) – Lempäälä → Tampere").
-Card content: First column = selected outbound train; second column = selected return train. Replace placeholder times/numbers with the user’s dropdown choices.
+Section title: One line combining departure time and number with direction (e.g. "08:20 (1719) – Lempäälä → Tampere"). SummaryCard and Timeline use `hideTitle` prop to avoid duplicating it.
+Card content: First column = selected outbound train; second column = selected return train. Replace placeholder times/numbers with the user's dropdown choices.
 Card color coding:
-- First (outbound) card: Orange to Amber gradient background
-- Second (return) card: Indigo to Purple gradient background
-- Stats boxes: Semi-transparent white overlay
+- First (outbound) card: Light lime background (`var(--mantine-color-lime-0)`)
+- Second (return) card: Light cyan background (`var(--mantine-color-cyan-0)`)
+- Stats boxes: White background with `border-radius: var(--mantine-radius-sm)`
+- Stats layout: 2×2 SimpleGrid showing On Time %, Avg Delay, On Time count/total, Cancelled count
+- Progress bar: Mantine `Progress.Root` with 4 sections (on-time green, slight yellow, delayed red, cancelled gray)
+- Legend: Shared `StatusLegend` component below progress bar
 
-Each timeline: row of colored cells (green/yellow/red/gray), legend, tooltip on hover.
+Each timeline: row of colored button cells (44×44px), sorted oldest-to-newest (left to right), wrapped in a Mantine `Group` with `wrap="wrap"`. Each cell shows:
+- Delay value ("+N" or "0") and day-of-month below; "X" for cancelled
+- Tooltip on hover: Finnish date + status text (e.g. "ma 27.1.: On time" or "ti 28.1.: +3 min delay")
+- Shared `StatusLegend` component below cells
 ```
 
 ### Table View (second tab)
@@ -109,7 +115,7 @@ Each timeline: row of colored cells (green/yellow/red/gray), legend, tooltip on 
 │  ├────────────┼──────────┼───────────┼─────────┼───────┼───────┤│
 │  │  ti 28.1.  │ HL 1719  │   08:20   │  08:23  │ +3min │ 🟡    ││
 │  │  ma 27.1.  │ HL 1719  │   08:20   │  08:20  │  0min │ 🟢    ││
-│  │  pe 24.1.  │ HL 1719  │   08:20   │  08:21  │ +1min │ 🟡    ││
+│  │  pe 24.1.  │ HL 1719  │   08:20   │  08:21  │ +1min │ 🟢    ││
 │  │  to 23.1.  │ HL 1719  │   08:20   │  08:20  │  0min │ 🟢    ││
 │  │  ke 22.1.  │ HL 1719  │   08:20   │  08:20  │  0min │ 🟢    ││
 │  │  ti 21.1.  │ HL 1719  │   08:20   │  08:20  │  0min │ 🟢    ││
@@ -123,7 +129,7 @@ Each timeline: row of colored cells (green/yellow/red/gray), legend, tooltip on 
 │  │  Date      │ Train    │ Scheduled │ Actual  │ Delay │Status ││
 │  ├────────────┼──────────┼───────────┼─────────┼───────┼───────┤│
 │  │  ti 28.1.  │ HL 9700  │   16:35   │  16:35  │  0min │ 🟢    ││
-│  │  ma 27.1.  │ HL 9700  │   16:35   │  16:36  │ +1min │ 🟡    ││
+│  │  ma 27.1.  │ HL 9700  │   16:35   │  16:36  │ +1min │ 🟢    ││
 │  │  pe 24.1.  │ HL 9700  │   16:35   │  16:35  │  0min │ 🟢    ││
 │  │  to 23.1.  │ HL 9700  │   16:35   │  16:35  │  0min │ 🟢    ││
 │  │  ke 22.1.  │ HL 9700  │   16:35   │  16:41  │ +6min │ 🔴    ││
@@ -136,11 +142,13 @@ Each timeline: row of colored cells (green/yellow/red/gray), legend, tooltip on 
 └─────────────────────────────────────────────────────────────────┘
 
 Table features:
-- Two sections: first = selected outbound train, second = selected return train. Headers show selected time and number (e.g. "08:20 (1719) – Lempäälä → Tampere"). Default sort: newest first (descending by date). At least Date column sortable.
-- Alternating row colors for readability.
-- Status column: colored badge (green / yellow / red / gray per color scheme).
+- Two separate Card sections (each with `shadow="sm"`, `withBorder`): first = selected outbound train, second = selected return train. Each has a `Title order={2} size="h4"` header showing selected time and number (e.g. "08:20 (1719) – Lempäälä → Tampere").
+- Default sort: newest first (descending by date). Date column is sortable (toggles asc/desc); shows sort indicator text "(ascending ^)" / "(descending v)". Other columns not sortable.
+- Mantine `Table` with `striped` and `highlightOnHover` for readability, wrapped in `ScrollArea` for horizontal scroll on mobile.
+- Status column: Mantine `Badge` with `variant="filled"` and status color (green / yellow / red / gray).
 - Cancelled: Actual and Delay columns show "-".
-- Delay column: green text for 0, red (or default) for positive values. Time format: 24h, Finnish local (e.g. 08:20).
+- Delay column: text color matches the record's status color (green for ON_TIME, yellow for SLIGHT_DELAY, red for DELAYED). Format: "+Nmin" for positive delay, "0min" for on time. `fw={500}` for emphasis.
+- Time format: 24h, Finnish local (e.g. 08:20). Train column: "{trainType} {trainNumber}" (e.g. "HL 1719").
 ```
 
 ### Mobile Layout (< 768px)
@@ -148,8 +156,8 @@ Table features:
 ```
 ┌───────────────────────────┐
 │                           │
-│  🚂 Commute Punctuality    │
-│   Lempäälä ↔ Tampere       │
+│  Commute Punctuality        │
+│   Lempäälä - Tampere        │
 │                           │
 ├───────────────────────────┤
 │ ┌───────────────────────┐ │
@@ -192,16 +200,15 @@ Table features:
 │                           │
 ├───────────────────────────┤
 │ Data: Digitraffic /       │
-│ Fintraffic • Weekdays only │
+│ Fintraffic - Weekdays only │
 └───────────────────────────┘
 
 Mobile adaptations:
-- Cards stack vertically
-- Date inputs on same row; train selects (Outbound train, Return train) stacked vertically or in two columns—no horizontal overflow of the full page
-- Fetch button below selects
-- Tab labels: Summary, Table (abbreviated or icon-only on small screens)
-- Table becomes horizontally scrollable
-- On Summary tab, below the stacked cards the two timelines stack vertically (one column), each full width; timeline cells may wrap to multiple rows within each timeline card
+- Summary tab: the two-column SimpleGrid collapses to a single column — outbound section (title + card + timeline) stacks above return section
+- Date inputs on same row (flex wrap); train selects wrap below; fetch button at end
+- Tab labels: Summary, Table (with icons: chart bar, table)
+- Table becomes horizontally scrollable via Mantine `ScrollArea`
+- Timeline cells wrap to multiple rows within each timeline card (Group with `wrap="wrap"`)
 ```
 
 ### Loading State
@@ -209,13 +216,13 @@ Mobile adaptations:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
-│                     ⟳  Fetching data...                         │
-│                                                                 │
-│                    Loading 12 of 14 days                        │
-│                    ████████████░░░░░░░░                         │
+│                        ⟳ (spinner)                              │
+│                     Fetching data...                            │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+A centered Mantine `Loader` (size="lg") with "Fetching data..." text below. No progress bar or day count — the spinner shows until all queries complete. The container has `role="status"` and `aria-live="polite"` for accessibility.
 
 ### Error State
 
@@ -234,10 +241,12 @@ Mobile adaptations:
 
 ### Too many API calls (validation error)
 
-When the selected date range would require more than 30 API calls (based on what is already in local storage), show an error state **instead of** loading or fetching.
+When the selected date range would require more than 30 API calls (based on what is already in local storage), two things happen:
 
-- **Message:** Clear text that the chosen range would require more than 30 API calls and the user should narrow the range (or rely on already cached data). Optionally show the computed number (e.g. "Would require 42 API calls. Maximum is 30.").
-- **Behaviour:** No loading spinner; no API calls. User can change the date range and click Fetch again.
+1. **Inline error below DateRangePicker:** Red text (`role="alert"`) showing "Would require {N} API calls. Maximum is 30." The Fetch Data button is disabled.
+2. **Content area alert (after clicking Fetch while over limit):** A Mantine `Alert` (color orange, variant light) with title "Too many API calls" showing the full message: "This date range would require more than 30 API calls. Please narrow the range or use already cached data." with the count below.
+
+- **Behaviour:** No loading spinner; no API calls are made. User can change the date range and click Fetch again.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -248,12 +257,23 @@ When the selected date range would require more than 30 API calls (based on what
 │     Please narrow the range or use already cached data.         │
 │     (Would require 42 API calls. Maximum is 30.)                │
 │                                                                 │
-│     [ Change date range ]                                       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Initial State (before first fetch)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│     Select a date range and click "Fetch Data" to load          │
+│     train data.                                                 │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Empty State
+Shown in the content area before the user has clicked Fetch Data. Centered dimmed text with `role="status"` and `aria-live="polite"`.
+
+### Empty State (after fetch, no results)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -266,9 +286,11 @@ When the selected date range would require more than 30 API calls (based on what
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+Shown when fetch completes but returns zero records. Centered with inbox icon, dimmed text, `role="status"` and `aria-live="polite"`.
+
 ### No route data (train selects)
 
-When route data is not available (e.g. first visit or route fetch has not run), the train selection dropdowns are **disabled** and show the text **"No route data"** (or a single default option). The app uses default train numbers (1719 outbound, 9700 return) for Fetch and all views until route data exists; then the selects are populated from `train:route:today:{date}` and the user can choose trains. When route data exists, default selection is 1719 (outbound) and 9700 (return) when those trains appear in the options, otherwise the first option in each list.
+When route data is not available (e.g. first visit or route fetch has not run), the train selection dropdowns are **disabled** and show the placeholder text **"No route data"**. The app uses default train numbers (1719 outbound, 9700 return) for Fetch and all views until route data exists; then the selects are populated from `train:route:weekday` and the user can choose trains. When route data exists, default selection is 1719 (outbound) and 9700 (return) when those trains appear in the options, otherwise the first option in each list.
 
 ---
 
@@ -282,8 +304,8 @@ Use these theme tokens consistently for status and train cards:
 | Slight delay (2–5 min) | `yellow.5` |
 | Delayed (>5 min) | `red.5` |
 | Cancelled | `gray.6` |
-| Morning card | Orange to amber (e.g. `orange.5` → `yellow.6`) |
-| Evening card | Indigo to purple (e.g. `indigo.5` → `violet.5`) |
+| Outbound (morning) card | Light lime background (`lime.0`) |
+| Return (evening) card | Light cyan background (`cyan.0`) |
 
 **Implementation (CSS variables):** Mantine exposes colors as CSS variables with a **hyphen** between color name and shade. In code, use `var(--mantine-color-{name}-{shade})`, e.g. `var(--mantine-color-green-5)`, `var(--mantine-color-yellow-5)`, `var(--mantine-color-red-5)`, `var(--mantine-color-gray-6)`. Using a dot (e.g. `green.5`) in the variable name will not resolve and cells will render without background color.
 

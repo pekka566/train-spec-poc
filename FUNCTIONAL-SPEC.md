@@ -141,7 +141,22 @@ const TRAINS = {
 };
 ```
 
-The app supports **either** fixed train numbers (1719, 9700) **or** user-selected trains from the route data. When route data exists, the two selects (Outbound train, Return train) supply the train numbers used for Fetch, Summary, and Table; default selection is 1719 (outbound) and 9700 (return) when those trains appear in the options, otherwise the first option in each list. When route data is missing, defaults 1719 (outbound) and 9700 (return) are used. The one-time GraphQL route fetch (see §5) uses a single query (trains containing Lempäälä) and stores only trains that **stop at Lempäälä** (trainStopping true at Lempäälä); both directions are included. Each stored record includes a direction field derived from which departure time is earlier.
+The app supports **either** fixed train numbers (1719, 9700) **or** user-selected trains from the route data. When route data exists, the two selects (Outbound train, Return train) supply the train numbers used for Fetch, Summary, and Table; default selection is 1719 (outbound) and 9700 (return) when those trains appear in the options, otherwise the first option in each list. When route data is missing, defaults 1719 (outbound) and 9700 (return) are used. The one-time GraphQL route fetch (see §5) uses a single query (trains containing Lempäälä) and stores only trains that **stop at Lempäälä** (trainStopping true at Lempäälä); both directions are included. Each stored record includes a direction field derived from which departure time is earlier. Only commuter and long-distance train types are included (see TECHNICAL-SPEC for the full list of allowed train types).
+
+### Train Configuration
+
+```typescript
+interface TrainConfig {
+  number: number;
+  name: string;
+  from: string;        // Station short code (e.g. "LPÄ")
+  to: string;          // Station short code (e.g. "TPE")
+  scheduledTime: string;
+  direction: string;   // e.g. "Lempäälä → Tampere"
+}
+```
+
+When route-selected trains are used, `name` is formatted as `"HH:mm (trainNumber)"` (e.g. `"08:20 (1719)"`). For default trains, `name` is `"Morning train"` / `"Evening train"`. The display title combines name and direction: `"08:20 (1719) – Lempäälä → Tampere"` for route-selected, or `"Morning train 8:20 – Lempäälä → Tampere"` for defaults.
 
 ### Route data (one-time fetch)
 
@@ -149,8 +164,8 @@ Stored route items (e.g. `RouteTrainInfo`) include at least: **train number**, *
 
 ## User interface
 
-- **Header:** Title "🚂 Commute Punctuality", subtitle "Lempäälä ↔ Tampere" (use this exact wording).
-- **Single-page:** header, date range picker, **two selects** (Outbound train, Return train) with options in format hh:mm (train number), a “Fetch” button, **tab navigation** (Summary | Table), and a content area that shows one of the two views. Data is fetched only when the user clicks Fetch (no automatic fetch on load). Footer text: "Data: Digitraffic / Fintraffic • Weekdays only".
+- **Header:** Title "Commute Punctuality", subtitle "Lempäälä - Tampere" (use this exact wording; no emoji, plain hyphen).
+- **Single-page:** header, date range picker, **two selects** (Outbound train, Return train) with options in format hh:mm (train number), a "Fetch Data" button, **tab navigation** (Summary | Table), and a content area that shows one of the two views. Data is fetched only when the user clicks Fetch Data (no automatic fetch on load). **Before the first fetch**, show a prompt text: "Select a date range and click "Fetch Data" to load train data." Footer text: "Data: Digitraffic / Fintraffic - Weekdays only" (plain hyphen, not bullet).
 - **Summary**: Two cards (selected outbound train, selected return train) with statistics and a proportion bar, plus day-by-day colored timelines for both trains. Headings use the selected train's departure time and number, e.g. "08:20 (1719) – Lempäälä → Tampere".
 - **Table**: Sortable list of all records for the two selected trains.
 - **Loading and errors**: A loading indicator while data is fetched; an error message if the API fails; an empty state if no data for the range.
