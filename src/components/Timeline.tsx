@@ -3,7 +3,8 @@ import type { TrainRecord, TrainConfig } from "@/types/train";
 import { formatFinnishDate } from "@/utils/dateUtils";
 import { getTrainTitle } from "@/utils/trainUtils";
 import { sortByDate } from "@/utils/statsCalculator";
-import { StatusLegend, STATUS_LEGEND_ITEMS } from "./StatusLegend";
+import { STATUS_LEGEND_ITEMS } from "@/constants/statusLegend";
+import { StatusLegend } from "./StatusLegend";
 
 interface TimelineProps {
   train: TrainConfig;

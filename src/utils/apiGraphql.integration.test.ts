@@ -4,7 +4,11 @@ import {
   buildRouteQuery,
   runRouteFetchOnce,
   getRouteWeekdayFromStorage,
+  getRouteTodayFromStorage,
+  getRouteTrainsByDirection,
+  filterReturnOptions,
 } from "./apiGraphql";
+import { getTodayFinnish } from "./dateUtils";
 
 /** Mock timeTableRow shape; trainStopping must be true at Lempäälä for train to be included. */
 type MockRow = {
@@ -114,7 +118,7 @@ describe("apiGraphql integration", () => {
   it("filters out trains whose trainType.name is not in ALLOWED_TRAIN_TYPES", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation((_url: string, _opts?: { body?: string }) => {
+      vi.fn().mockImplementation(() => {
         return Promise.resolve({
           ok: true,
           json: () =>
@@ -144,7 +148,7 @@ describe("apiGraphql integration", () => {
   it("excludes trains that pass through Lempäälä without stopping (trainStopping false at Lempäälä)", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockImplementation((_url: string, _opts?: { body?: string }) => {
+      vi.fn().mockImplementation(() => {
         return Promise.resolve({
           ok: true,
           json: () =>
@@ -182,6 +186,143 @@ describe("apiGraphql integration", () => {
     const byNumber = Object.fromEntries(stored!.trains.map((r) => [r.trainNumber, r]));
     expect(byNumber[1719]).toBeDefined();
     expect(byNumber[9700]).toBeDefined();
+  });
+
+  it("fetchRouteTodayGraphQL throws when response is not ok", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+    } as Response);
+    await expect(fetchRouteTodayGraphQL("2026-01-29")).rejects.toThrow(
+      "GraphQL error: 500 Internal Server Error"
+    );
+  });
+
+  it("fetchRouteTodayGraphQL throws when response has errors", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({ errors: [{ message: "Server error" }] }),
+    } as Response);
+    await expect(fetchRouteTodayGraphQL("2026-01-29")).rejects.toThrow(
+      "Server error"
+    );
+  });
+
+  it("excludes train with no departure at Lempäälä or Tampere (getDepartureAndDirection returns null)", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          data: {
+            trainsByDepartureDate: [
+              mockTrain(1719, "HL", [
+                { type: "DEPARTURE", scheduledTime: "2026-01-29T06:20:00.000Z", station: { name: "Lempäälä" }, trainStopping: true },
+                { type: "ARRIVAL", scheduledTime: "2026-01-29T06:35:00.000Z", station: { name: "Tampere asema" } },
+              ]),
+              mockTrain(9999, "HL", [
+                { type: "ARRIVAL", scheduledTime: "2026-01-29T07:00:00.000Z", station: { name: "Lempäälä" }, trainStopping: true },
+                { type: "ARRIVAL", scheduledTime: "2026-01-29T07:15:00.000Z", station: { name: "Tampere asema" } },
+              ]),
+            ],
+          },
+        }),
+    } as Response);
+    const result = await fetchRouteTodayGraphQL("2026-01-29");
+    expect(result).toHaveLength(1);
+    expect(result[0]!.trainNumber).toBe(1719);
+  });
+
+  describe("getRouteTodayFromStorage", () => {
+    it("returns null when key is missing", () => {
+      localStorage.removeItem("train:route:today:2026-01-27");
+      expect(getRouteTodayFromStorage("2026-01-27")).toBeNull();
+    });
+
+    it("returns null when value is invalid JSON", () => {
+      localStorage.setItem("train:route:today:2026-01-27", "not json");
+      expect(getRouteTodayFromStorage("2026-01-27")).toBeNull();
+    });
+
+    it("returns null when payload has no date or trains", () => {
+      localStorage.setItem("train:route:today:2026-01-27", "{}");
+      expect(getRouteTodayFromStorage("2026-01-27")).toBeNull();
+      localStorage.setItem("train:route:today:2026-01-27", JSON.stringify({ date: "2026-01-27" }));
+      expect(getRouteTodayFromStorage("2026-01-27")).toBeNull();
+    });
+
+    it("returns payload when valid", () => {
+      const payload = { date: "2026-01-27", trains: [{ trainNumber: 1719, stationName: "Lempäälä", scheduledDeparture: "2026-01-27T06:20:00Z", direction: "Lempäälä → Tampere" as const }] };
+      localStorage.setItem("train:route:today:2026-01-27", JSON.stringify(payload));
+      expect(getRouteTodayFromStorage("2026-01-27")).toEqual(payload);
+    });
+  });
+
+  describe("getRouteWeekdayFromStorage", () => {
+    it("returns null when key is missing", () => {
+      localStorage.removeItem("train:route:weekday");
+      expect(getRouteWeekdayFromStorage()).toBeNull();
+    });
+
+    it("returns null when value is invalid JSON", () => {
+      localStorage.setItem("train:route:weekday", "not json");
+      expect(getRouteWeekdayFromStorage()).toBeNull();
+    });
+
+    it("returns null when payload has no date or trains", () => {
+      localStorage.setItem("train:route:weekday", "{}");
+      expect(getRouteWeekdayFromStorage()).toBeNull();
+    });
+
+    it("returns payload when valid", () => {
+      const payload = { date: "2026-01-29", trains: [{ trainNumber: 1719, stationName: "Lempäälä", scheduledDeparture: "2026-01-29T06:20:00Z", direction: "Lempäälä → Tampere" as const }] };
+      localStorage.setItem("train:route:weekday", JSON.stringify(payload));
+      expect(getRouteWeekdayFromStorage()).toEqual(payload);
+      localStorage.removeItem("train:route:weekday");
+    });
+  });
+
+  describe("getRouteTrainsByDirection", () => {
+    it("splits trains by direction and sorts by scheduledDeparture", () => {
+      const trains = [
+        { trainNumber: 9700, stationName: "Tampere asema", scheduledDeparture: "2026-01-29T14:35:00Z", direction: "Tampere → Lempäälä" as const },
+        { trainNumber: 1719, stationName: "Lempäälä", scheduledDeparture: "2026-01-29T06:20:00Z", direction: "Lempäälä → Tampere" as const },
+      ];
+      const { outbound, return: returnTrains } = getRouteTrainsByDirection(trains);
+      expect(outbound).toHaveLength(1);
+      expect(outbound[0]!.trainNumber).toBe(1719);
+      expect(returnTrains).toHaveLength(1);
+      expect(returnTrains[0]!.trainNumber).toBe(9700);
+    });
+  });
+
+  describe("filterReturnOptions", () => {
+    it("returns only return trains departing after selected outbound departure", () => {
+      const returnTrains = [
+        { trainNumber: 9700, stationName: "Tampere asema", scheduledDeparture: "2026-01-29T14:35:00Z", direction: "Tampere → Lempäälä" as const },
+        { trainNumber: 9701, stationName: "Tampere asema", scheduledDeparture: "2026-01-29T16:00:00Z", direction: "Tampere → Lempäälä" as const },
+      ];
+      const filtered = filterReturnOptions(returnTrains, "2026-01-29T08:20:00Z");
+      expect(filtered).toHaveLength(2);
+      const filteredAfter = filterReturnOptions(returnTrains, "2026-01-29T15:00:00Z");
+      expect(filteredAfter).toHaveLength(1);
+      expect(filteredAfter[0]!.trainNumber).toBe(9701);
+    });
+  });
+
+  it("runRouteFetchOnce does not fetch when already fetched today", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-02-03T12:00:00+02:00"));
+    const today = getTodayFinnish();
+    localStorage.setItem("train:route:fetched", today);
+    const payload = { date: "2026-01-29", trains: [{ trainNumber: 1719, stationName: "Lempäälä", scheduledDeparture: "2026-01-29T06:20:00Z", direction: "Lempäälä → Tampere" as const }] };
+    localStorage.setItem("train:route:weekday", JSON.stringify(payload));
+    await runRouteFetchOnce();
+    const stored = getRouteWeekdayFromStorage();
+    expect(stored!.trains).toHaveLength(1);
+    expect(stored!.trains[0]!.trainNumber).toBe(1719);
+    vi.useRealTimers();
   });
 
   it(

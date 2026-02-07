@@ -6,6 +6,8 @@ import {
   isToday,
   getTodayFinnish,
   getReferenceWeekdayDate,
+  getDefaultDateRange,
+  isEndDateInFuture,
 } from "./dateUtils";
 
 describe("dateUtils", () => {
@@ -127,6 +129,48 @@ describe("dateUtils", () => {
     it("returns next Monday when today is Sunday", () => {
       vi.setSystemTime(new Date("2026-02-01T12:00:00+02:00"));
       expect(getReferenceWeekdayDate()).toBe("2026-02-02");
+    });
+  });
+
+  describe("getDefaultDateRange", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("returns last 14 days including today", () => {
+      vi.setSystemTime(new Date("2026-02-03T12:00:00+02:00"));
+      const { startDate, endDate } = getDefaultDateRange();
+      expect(endDate).toBe("2026-02-03");
+      expect(startDate).toBe("2026-01-21");
+    });
+  });
+
+  describe("isEndDateInFuture", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("returns true when end date is after today", () => {
+      vi.setSystemTime(new Date("2026-02-03T12:00:00+02:00"));
+      expect(isEndDateInFuture("2026-02-04")).toBe(true);
+    });
+
+    it("returns false when end date is today", () => {
+      vi.setSystemTime(new Date("2026-02-03T12:00:00+02:00"));
+      expect(isEndDateInFuture("2026-02-03")).toBe(false);
+    });
+
+    it("returns false when end date is before today", () => {
+      vi.setSystemTime(new Date("2026-02-03T12:00:00+02:00"));
+      expect(isEndDateInFuture("2026-02-02")).toBe(false);
     });
   });
 });

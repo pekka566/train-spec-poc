@@ -84,4 +84,23 @@ describe("SummaryCard", () => {
     );
     expect(screen.queryByText(/Morning train 8:20 – Lempäälä → Tampere/)).not.toBeInTheDocument();
   });
+
+  it("renders without error when totalCount is 0 (cancelled segment value 0)", () => {
+    const summary = createSummary({
+      totalCount: 0,
+      onTimeCount: 0,
+      slightDelayCount: 0,
+      delayedCount: 0,
+      cancelledCount: 0,
+      onTimePercent: 0,
+      slightDelayPercent: 0,
+      delayedPercent: 0,
+      averageDelay: 0,
+    });
+    render(
+      <SummaryCard train={TRAINS.morning} summary={summary} variant="morning" />
+    );
+    expect(screen.getByText("0%")).toBeInTheDocument();
+    expect(screen.getByText("0")).toBeInTheDocument();
+  });
 });

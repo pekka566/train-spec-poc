@@ -42,9 +42,11 @@ src/
 
 ### After every change
 
+- **Run the linter** and fix any reported errors: `pnpm lint`. Do not consider a change complete until lint passes.
 - **Run all tests** and ensure they pass: `pnpm test -- --run`
+- **Run test coverage report**: `pnpm test:coverage`. If the report shows uncovered lines or branches, **ask the user** whether to write tests to cover them before considering the change complete.
 - **Run build** and ensure it succeeds: `pnpm build`
-- Do not consider a change complete until both tests and build pass.
+- Do not consider a change complete until lint passes, tests pass, coverage has been checked (and any requested coverage gaps addressed), and build succeeds.
 
 ## Domain Knowledge
 

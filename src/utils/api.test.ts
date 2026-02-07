@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { fetchTrain, parseTrainResponse } from "./api";
+import {
+  fetchTrain,
+  parseTrainResponse,
+  getStationCodesByDirection,
+} from "./api";
 import type { TrainResponse } from "@/types/train";
 
 describe("api", () => {
@@ -277,6 +281,22 @@ describe("api", () => {
 
       const record = parseTrainResponse(response);
       expect(record).toBeNull();
+    });
+  });
+
+  describe("getStationCodesByDirection", () => {
+    it("returns LPÄ and TPE for Lempäälä → Tampere", () => {
+      expect(getStationCodesByDirection("Lempäälä → Tampere")).toEqual({
+        from: "LPÄ",
+        to: "TPE",
+      });
+    });
+
+    it("returns TPE and LPÄ for Tampere → Lempäälä", () => {
+      expect(getStationCodesByDirection("Tampere → Lempäälä")).toEqual({
+        from: "TPE",
+        to: "LPÄ",
+      });
     });
   });
 });

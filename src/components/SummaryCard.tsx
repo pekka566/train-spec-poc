@@ -9,7 +9,8 @@ import {
 } from "@mantine/core";
 import type { TrainSummary, TrainConfig } from "@/types/train";
 import { getTrainTitle } from "@/utils/trainUtils";
-import { StatusLegend, STATUS_LEGEND_ITEMS } from "./StatusLegend";
+import { STATUS_LEGEND_ITEMS } from "@/constants/statusLegend";
+import { StatusLegend } from "./StatusLegend";
 
 const cardBackgroundColor = {
   morning: "var(--mantine-color-lime-0)",

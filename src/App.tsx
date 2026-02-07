@@ -60,6 +60,7 @@ function App() {
 
   const routeStorage = useMemo(
     () => getRouteWeekdayFromStorage(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-read storage when route fetch completes
     [routeStorageRevision],
   );
   const { outbound: outboundList, return: returnList } = useMemo(() => {

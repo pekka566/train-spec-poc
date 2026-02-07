@@ -68,6 +68,18 @@ describe("statsCalculator", () => {
       expect(summary.totalCount).toBe(2);
       expect(summary.onTimePercent).toBe(50); // 1/2 = 50%
     });
+
+    it("returns averageDelay 0 when all records are cancelled", () => {
+      const records: TrainRecord[] = [
+        createRecord({ status: "CANCELLED", cancelled: true }),
+        createRecord({ status: "CANCELLED", cancelled: true, date: "2026-01-28" }),
+      ];
+
+      const summary = computeSummary(records);
+      expect(summary.totalCount).toBe(2);
+      expect(summary.cancelledCount).toBe(2);
+      expect(summary.averageDelay).toBe(0);
+    });
   });
 
   describe("filterByTrain", () => {
