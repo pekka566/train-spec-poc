@@ -1,4 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
+import { http, HttpResponse } from "msw";
+import { server } from "@/mocks/server";
 import {
   fetchTrain,
   parseTrainResponse,
@@ -6,79 +8,59 @@ import {
 } from "./api";
 import type { TrainResponse } from "@/types/train";
 
+const REST_URL = "https://rata.digitraffic.fi/api/v1/trains/:date/:trainNumber";
+
 describe("api", () => {
   describe("fetchTrain", () => {
-    beforeEach(() => {
-      vi.stubGlobal("fetch", vi.fn());
-    });
-
-    afterEach(() => {
-      vi.unstubAllGlobals();
-    });
-
     it("returns train data on success", async () => {
-      const mockResponse: TrainResponse[] = [
-        {
-          trainNumber: 1719,
-          departureDate: "2026-01-27",
-          trainType: "HL",
-          operatorShortCode: "vr",
-          runningCurrently: false,
-          cancelled: false,
-          timeTableRows: [],
-        },
-      ];
-
-      vi.mocked(fetch).mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve(mockResponse),
-      } as Response);
-
+      // Default MSW handler returns train-1719 fixture
       const result = await fetchTrain("2026-01-27", 1719);
-      expect(result).toEqual(mockResponse[0]);
-      expect(fetch).toHaveBeenCalledWith(
-        "https://rata.digitraffic.fi/api/v1/trains/2026-01-27/1719"
-      );
+      expect(result).not.toBeNull();
+      expect(result?.trainNumber).toBe(1719);
+      expect(result?.departureDate).toBe("2026-01-27");
+      expect(result?.trainType).toBe("HL");
+      expect(result?.timeTableRows).toHaveLength(2);
     });
 
     it("returns null for empty response", async () => {
-      vi.mocked(fetch).mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve([]),
-      } as Response);
-
+      server.use(
+        http.get(REST_URL, () => {
+          return HttpResponse.json([]);
+        })
+      );
       const result = await fetchTrain("2026-01-27", 1719);
       expect(result).toBeNull();
     });
 
     it("returns null for 404", async () => {
-      vi.mocked(fetch).mockResolvedValue({
-        ok: false,
-        status: 404,
-        statusText: "Not Found",
-      } as Response);
-
+      server.use(
+        http.get(REST_URL, () => {
+          return new HttpResponse(null, { status: 404, statusText: "Not Found" });
+        })
+      );
       const result = await fetchTrain("2026-01-27", 1719);
       expect(result).toBeNull();
     });
 
     it("returns null for unexpected JSON structure", async () => {
-      vi.mocked(fetch).mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve([{ foo: "bar" }]),
-      } as Response);
-
+      server.use(
+        http.get(REST_URL, () => {
+          return HttpResponse.json([{ foo: "bar" }]);
+        })
+      );
       const result = await fetchTrain("2026-01-27", 1719);
       expect(result).toBeNull();
     });
 
     it("throws on other HTTP errors", async () => {
-      vi.mocked(fetch).mockResolvedValue({
-        ok: false,
-        status: 500,
-        statusText: "Internal Server Error",
-      } as Response);
-
+      server.use(
+        http.get(REST_URL, () => {
+          return new HttpResponse(null, {
+            status: 500,
+            statusText: "Internal Server Error",
+          });
+        })
+      );
       await expect(fetchTrain("2026-01-27", 1719)).rejects.toThrow(
         "API error: 500 Internal Server Error"
       );

@@ -2,22 +2,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createElement, type ReactNode } from "react";
+import { http, HttpResponse } from "msw";
+import { server } from "@/mocks/server";
 import type { TrainNumbers } from "@/utils/trainStorage";
-import type { TrainRecord, TrainResponse } from "@/types/train";
+import type { TrainRecord } from "@/types/train";
 
-// Mock modules before imports
-vi.mock("@/utils/api", () => ({
-  fetchTrain: vi.fn(),
-  parseTrainResponseWithStations: vi.fn(),
-  getStationCodesByDirection: vi.fn().mockReturnValue({ from: "LPÄ", to: "TPE" }),
-  getTrainStatus: vi.fn((cancelled: boolean, delay: number) => {
-    if (cancelled) return "CANCELLED";
-    if (delay <= 1) return "ON_TIME";
-    if (delay <= 5) return "SLIGHT_DELAY";
-    return "DELAYED";
-  }),
-}));
+const REST_URL = "https://rata.digitraffic.fi/api/v1/trains/:date/:trainNumber";
 
+// Mock storage module (controls what API calls are "needed" and what's cached)
 vi.mock("@/utils/trainStorage", async (importOriginal) => {
   const original = await importOriginal<typeof import("@/utils/trainStorage")>();
   return {
@@ -40,7 +32,6 @@ vi.mock("@/utils/dateUtils", async (importOriginal) => {
 });
 
 import { useTrainData } from "./useTrainData";
-import { fetchTrain, parseTrainResponseWithStations } from "@/utils/api";
 import {
   getNeededApiCalls,
   getApiCallsNeeded,
@@ -48,8 +39,6 @@ import {
   getTrainFromStorage,
 } from "@/utils/trainStorage";
 
-const mockFetchTrain = vi.mocked(fetchTrain);
-const mockParse = vi.mocked(parseTrainResponseWithStations);
 const mockGetNeededApiCalls = vi.mocked(getNeededApiCalls);
 const mockGetApiCallsNeeded = vi.mocked(getApiCallsNeeded);
 const mockGetCachedData = vi.mocked(getCachedData);
@@ -129,11 +118,9 @@ describe("useTrainData", () => {
     expect(result.current.tooManyApiCalls).toBe(false);
   });
 
-  it("fetch() triggers data fetching", async () => {
-    const record = createRecord({ date: "2026-02-03" });
+  it("fetch() triggers data fetching via MSW", async () => {
+    // isToday("2026-02-03") returns true, so cache is skipped
     mockGetApiCallsNeeded.mockReturnValue([{ date: "2026-02-03", trainNumber: 1719 }]);
-    mockFetchTrain.mockResolvedValue({ trainNumber: 1719 } as TrainResponse);
-    mockParse.mockReturnValue(record);
     mockGetCachedData.mockReturnValue([]);
 
     const { result } = renderHook(
@@ -149,11 +136,25 @@ describe("useTrainData", () => {
       expect(result.current.hasFetched).toBe(true);
       expect(result.current.data.length).toBeGreaterThanOrEqual(1);
     });
+
+    // Verify the data came through the real API → MSW → real parse chain
+    const record = result.current.data[0];
+    expect(record?.trainNumber).toBe(1719);
+    expect(record?.trainType).toBe("HL");
   });
 
   it("reports error when all API calls fail", async () => {
+    // Override MSW handler to return 500
+    server.use(
+      http.get(REST_URL, () => {
+        return new HttpResponse(null, {
+          status: 500,
+          statusText: "Internal Server Error",
+        });
+      })
+    );
+
     mockGetApiCallsNeeded.mockReturnValue([{ date: "2026-02-02", trainNumber: 1719 }]);
-    mockFetchTrain.mockRejectedValue(new Error("Network error"));
     mockGetCachedData.mockReturnValue([]);
 
     const wrapper = createWrapper();
@@ -177,7 +178,7 @@ describe("useTrainData", () => {
   it("reads from cache during fetch for past dates", async () => {
     const cachedRecord = createRecord({ date: "2026-02-02" });
     mockGetApiCallsNeeded.mockReturnValue([{ date: "2026-02-02", trainNumber: 1719 }]);
-    // The hook checks cache inside queryFn for non-today dates
+    // isToday("2026-02-02") returns false, so cache is checked
     mockGetTrainFromStorage.mockReturnValue(cachedRecord);
     mockGetCachedData.mockReturnValue([cachedRecord]);
 
@@ -207,7 +208,7 @@ describe("useTrainData", () => {
     });
 
     expect(result.current.hasFetched).toBe(true);
-    // Query is disabled when tooManyApiCalls, so fetchTrain should not be called
-    expect(mockFetchTrain).not.toHaveBeenCalled();
+    // Query is disabled when tooManyApiCalls, so no data should be fetched
+    expect(result.current.data).toEqual([]);
   });
 });
