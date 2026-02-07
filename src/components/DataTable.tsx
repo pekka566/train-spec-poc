@@ -118,7 +118,7 @@ export function DataTable({ train, records }: DataTableProps) {
                     {record.cancelled ? (
                       "-"
                     ) : (
-                      <Text span c={statusColors[record.status]} fw={500}>
+                      <Text span fw={500}>
                         {record.delayMinutes > 0
                           ? `+${record.delayMinutes}min`
                           : "0min"}
@@ -126,7 +126,11 @@ export function DataTable({ train, records }: DataTableProps) {
                     )}
                   </Table.Td>
                   <Table.Td>
-                    <Badge color={statusColors[record.status]} variant="filled">
+                    <Badge
+                      color={statusColors[record.status]}
+                      variant="filled"
+                      autoContrast
+                    >
                       {statusLabels[record.status]}
                     </Badge>
                   </Table.Td>

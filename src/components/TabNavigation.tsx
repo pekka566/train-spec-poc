@@ -8,25 +8,24 @@ interface TabNavigationProps {
   onTabChange: (tab: TabValue) => void;
 }
 
+export const TABS_ID = "main-tabs";
+
 export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
   return (
     <Tabs
+      id={TABS_ID}
       value={activeTab}
       onChange={(value) => onTabChange(value as TabValue)}
     >
       <Tabs.List>
         <Tabs.Tab
           value="summary"
-          id="tab-summary"
-          aria-controls="summary-panel"
           leftSection={<IconChartBar size={16} aria-hidden />}
         >
           Summary
         </Tabs.Tab>
         <Tabs.Tab
           value="table"
-          id="tab-table"
-          aria-controls="table-panel"
           leftSection={<IconTable size={16} aria-hidden />}
         >
           Table

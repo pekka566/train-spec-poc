@@ -99,6 +99,11 @@ User selects dates/trains → clicks Fetch → useTrainData:
 - `aria-sort` on sortable table headers
 - `aria-hidden` on decorative icons
 - Focus management: `mainContentRef` auto-focuses content area after data load
+- WCAG 2.1 AA color contrast: `--mantine-color-dimmed` overridden to `gray.7`; `primaryShade: 9` in light mode; green shade 9 darkened
+- `eslint-plugin-jsx-a11y` for compile-time a11y linting
+- `@axe-core/playwright` E2E tests in `e2e/accessibility.spec.ts` covering loading, selection, summary, table, and error states
+- `ariaLabels` prop on `DateInput` calendar navigation buttons
+- `aria-label` on `Progress.Section` components for screen readers
 
 ### Performance
 - `useMemo` for expensive derived state (route filtering, record filtering, summaries)
@@ -120,6 +125,7 @@ User selects dates/trains → clicks Fetch → useTrainData:
 - **API mocking**: `vi.stubGlobal('fetch', vi.fn(...))` for REST API tests
 - **Time mocking**: `vi.useFakeTimers()` + `vi.setSystemTime()` for timezone-dependent tests
 - **Pattern**: Arrange–Act–Assert; explicit error case tests; verify accessibility attributes
+- **E2E accessibility**: `e2e/accessibility.spec.ts` runs axe-core checks (WCAG 2.1 AA) on every app state (loading, selection, summary, table, error)
 
 ## Domain Knowledge
 

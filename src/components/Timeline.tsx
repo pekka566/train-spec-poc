@@ -21,6 +21,22 @@ const statusColors: Record<TrainRecord["status"], string> = {
   CANCELLED: "gray-6",
 };
 
+/** Text color that meets WCAG 2.1 AA contrast ratio (4.5:1) on each status background. */
+const statusTextColors: Record<TrainRecord["status"], string> = {
+  ON_TIME: "dark.9",
+  SLIGHT_DELAY: "dark.9",
+  DELAYED: "white",
+  CANCELLED: "white",
+};
+
+/** Secondary text color for date numbers on each status background. */
+const statusSecondaryTextColors: Record<TrainRecord["status"], string> = {
+  ON_TIME: "dark.6",
+  SLIGHT_DELAY: "dark.6",
+  DELAYED: "gray.2",
+  CANCELLED: "gray.3",
+};
+
 function getCellContent(record: TrainRecord): string {
   if (record.cancelled) return "X";
   if (record.delayMinutes <= 0) return "0";
@@ -88,10 +104,10 @@ export function Timeline({
                     justifyContent: "center",
                   }}
                 >
-                  <Text size="sm" fw={600} c="white">
+                  <Text size="sm" fw={600} c={statusTextColors[record.status]}>
                     {getCellContent(record)}
                   </Text>
-                  <Text size="xs" c="white" opacity={0.8}>
+                  <Text size="xs" c={statusSecondaryTextColors[record.status]}>
                     {record.date.slice(8)}
                   </Text>
                 </div>

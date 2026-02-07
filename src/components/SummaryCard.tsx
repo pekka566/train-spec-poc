@@ -63,13 +63,22 @@ export function SummaryCard({
         </SimpleGrid>
 
         <Box>
-          <Progress.Root size="lg" radius="xl">
-            <Progress.Section value={summary.onTimePercent} color="green.5" />
+          <Progress.Root size="lg" radius="xl" aria-label="Punctuality distribution">
+            <Progress.Section
+              value={summary.onTimePercent}
+              color="green.5"
+              aria-label={`On time ${Math.round(summary.onTimePercent)}%`}
+            />
             <Progress.Section
               value={summary.slightDelayPercent}
               color="yellow.5"
+              aria-label={`Slight delay ${Math.round(summary.slightDelayPercent)}%`}
             />
-            <Progress.Section value={summary.delayedPercent} color="red.5" />
+            <Progress.Section
+              value={summary.delayedPercent}
+              color="red.5"
+              aria-label={`Delayed ${Math.round(summary.delayedPercent)}%`}
+            />
             <Progress.Section
               value={
                 summary.totalCount > 0
@@ -77,6 +86,7 @@ export function SummaryCard({
                   : 0
               }
               color="gray.6"
+              aria-label={`Cancelled ${summary.totalCount > 0 ? Math.round((summary.cancelledCount / summary.totalCount) * 100) : 0}%`}
             />
           </Progress.Root>
           <StatusLegend items={STATUS_LEGEND_ITEMS} gap="xs" justify="center" />

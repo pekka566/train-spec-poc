@@ -81,6 +81,10 @@ export function DateRangePicker({
           valueFormat="YYYY-MM-DD"
           size="sm"
           style={{ flex: 1, minWidth: 140 }}
+          ariaLabels={{
+            previousMonth: "Previous month",
+            nextMonth: "Next month",
+          }}
         />
         <DateInput
           label="End date"
@@ -90,6 +94,10 @@ export function DateRangePicker({
           valueFormat="YYYY-MM-DD"
           size="sm"
           style={{ flex: 1, minWidth: 140 }}
+          ariaLabels={{
+            previousMonth: "Previous month",
+            nextMonth: "Next month",
+          }}
         />
         <Select
           label="Outbound train"

@@ -63,6 +63,13 @@ pnpm test:e2e:ui
 
 The tests automatically start the Vite dev server. If one is already running on port 5173, it will be reused.
 
+### Accessibility Testing
+
+Accessibility is checked at two levels:
+
+- **Lint-time**: `eslint-plugin-jsx-a11y` catches common a11y issues during development (runs with `pnpm lint`)
+- **E2E**: `@axe-core/playwright` runs WCAG 2.1 AA checks against the live app (runs with `pnpm test:e2e`)
+
 ## Other Scripts
 
 ```bash

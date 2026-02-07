@@ -15,7 +15,7 @@ import {
 import { IconAlertCircle, IconInbox } from "@tabler/icons-react";
 import { getAppVersion } from "@/utils/versionCheck";
 import { DateRangePicker } from "@/components/DateRangePicker";
-import { TabNavigation, type TabValue } from "@/components/TabNavigation";
+import { TabNavigation, TABS_ID, type TabValue } from "@/components/TabNavigation";
 import { SummaryCard } from "@/components/SummaryCard";
 import { Timeline } from "@/components/Timeline";
 import { DataTable } from "@/components/DataTable";
@@ -188,11 +188,10 @@ function App() {
           icon={<IconAlertCircle size={16} aria-hidden />}
           title="Failed to load train routes"
           color="red"
-          variant="light"
         >
           {routeError.message}
           <Box mt="sm">
-            <Button variant="light" size="sm" onClick={retryRouteFetch}>
+            <Button variant="outline" size="sm" onClick={retryRouteFetch}>
               Retry
             </Button>
           </Box>
@@ -219,11 +218,10 @@ function App() {
           icon={<IconAlertCircle size={16} aria-hidden />}
           title="Error"
           color="red"
-          variant="light"
         >
           {error.message}
           <Box mt="sm">
-            <Button variant="light" size="sm" onClick={fetch}>
+            <Button variant="outline" size="sm" onClick={fetch}>
               Retry
             </Button>
           </Box>
@@ -238,7 +236,6 @@ function App() {
           icon={<IconAlertCircle size={16} aria-hidden />}
           title="Too many API calls"
           color="orange"
-          variant="light"
         >
           This date range would require more than 30 API calls.
           <br />
@@ -414,11 +411,21 @@ function App() {
 
             <Box
               component="section"
-              role="region"
-              aria-labelledby={`tab-${activeTab}`}
-              id={`${activeTab}-panel`}
+              role="tabpanel"
+              aria-labelledby={`${TABS_ID}-tab-summary`}
+              id={`${TABS_ID}-panel-summary`}
+              hidden={activeTab !== "summary"}
             >
-              {renderContent()}
+              {activeTab === "summary" && renderContent()}
+            </Box>
+            <Box
+              component="section"
+              role="tabpanel"
+              aria-labelledby={`${TABS_ID}-tab-table`}
+              id={`${TABS_ID}-panel-table`}
+              hidden={activeTab !== "table"}
+            >
+              {activeTab === "table" && renderContent()}
             </Box>
           </Stack>
         </Box>

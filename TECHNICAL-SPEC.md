@@ -284,7 +284,7 @@ Section title: One line combining departure time and number with direction (e.g.
 
 - **Error handling**: Per-query errors surfaced in UI with a clear message; missing data for a single date does not break the whole range.
 - **Loading UX**: Show a centered Mantine `Loader` with "Fetching data..." text while queries are in flight; avoid layout shift.
-- **Accessibility**: Semantic HTML (`<main>`, `<header>`, `<section>`), skip-to-content link, `role="status"` with `aria-live="polite"` for loading/empty states, `aria-sort` on sortable table headers, `aria-hidden` on decorative icons, focus management (auto-focus content area after data loads).
+- **Accessibility**: Semantic HTML (`<main>`, `<header>`, `<section>`), skip-to-content link, `role="status"` with `aria-live="polite"` for loading/empty states, `aria-sort` on sortable table headers, `aria-hidden` on decorative icons, focus management (auto-focus content area after data loads). WCAG 2.1 AA color contrast enforced via Mantine theme overrides (`primaryShade: 9`, darkened dimmed color, adjusted green shade 9). Compile-time a11y linting via `eslint-plugin-jsx-a11y`. Runtime a11y validation via `@axe-core/playwright` E2E tests.
 - **Finnish timezone**: All user-visible times must be in `Europe/Helsinki` via dayjs with UTC and timezone plugins; store and transmit UTC from the API as-is.
 - **Responsiveness**: Layout works on mobile (stack summary cards, scrollable table/timeline) using Mantine’s responsive props or breakpoints; no horizontal scrolling of the page.
 
