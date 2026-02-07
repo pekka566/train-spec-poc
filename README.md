@@ -21,6 +21,16 @@ pnpm dev
 
 Opens the app at http://localhost:5173
 
+### Mock API mode
+
+Run with mocked API responses (no network required):
+
+```bash
+pnpm dev:mock
+```
+
+Or add `?mock` to any dev URL: `http://localhost:5173/?mock`
+
 ## Build
 
 ```bash

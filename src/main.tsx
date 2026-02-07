@@ -6,6 +6,10 @@ import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import App from "./App";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { initMocks } from "./mocks/init";
+import { checkVersionAndClearStorage } from "./utils/versionCheck";
+
+checkVersionAndClearStorage();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,14 +20,16 @@ const queryClient = new QueryClient({
   },
 });
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <MantineProvider>
-        <ErrorBoundary>
-          <App />
-        </ErrorBoundary>
-      </MantineProvider>
-    </QueryClientProvider>
-  </StrictMode>
-);
+initMocks().then(() => {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <MantineProvider>
+          <ErrorBoundary>
+            <App />
+          </ErrorBoundary>
+        </MantineProvider>
+      </QueryClientProvider>
+    </StrictMode>
+  );
+});

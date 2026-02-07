@@ -162,6 +162,12 @@ User selects dates/trains → clicks Fetch → useTrainData:
 - **Route data**: key `train:route:weekday` — updated once per day
 - **Route fetch flag**: key `train:route:fetched` — prevents redundant fetches
 
+### Versioning
+- Version in `package.json` is auto-bumped (patch) on every commit via pre-commit hook (`.githooks/pre-commit`)
+- To bump minor/major manually: change version in `package.json` before committing — the hook detects the change and skips auto-bump
+- Version is displayed in the app footer and used to clear localStorage when it changes (see `src/utils/versionCheck.ts`)
+- Git hooks path is set via `prepare` script (`git config core.hooksPath .githooks`), activated automatically on `pnpm install`
+
 ## Specifications
 
 - [FUNCTIONAL-SPEC.md](FUNCTIONAL-SPEC.md) - Requirements and user stories

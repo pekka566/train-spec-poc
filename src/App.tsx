@@ -13,6 +13,7 @@ import {
   Anchor,
 } from "@mantine/core";
 import { IconAlertCircle, IconInbox } from "@tabler/icons-react";
+import { getAppVersion } from "@/utils/versionCheck";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { TabNavigation, type TabValue } from "@/components/TabNavigation";
 import { SummaryCard } from "@/components/SummaryCard";
@@ -424,7 +425,7 @@ function App() {
 
         {/* Footer */}
         <Text size="sm" c="dimmed" ta="center">
-          Data: Digitraffic / Fintraffic - Weekdays only
+          Data: Digitraffic / Fintraffic - Weekdays only | v{getAppVersion()}
         </Text>
       </Stack>
     </Container>
