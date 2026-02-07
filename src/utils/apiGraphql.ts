@@ -1,4 +1,4 @@
-import { getTodayFinnish } from "./dateUtils";
+import { getTodayFinnish, getReferenceWeekdayDate } from "./dateUtils";
 
 /** Digitraffic GraphQL v2 POST endpoint (per FI docs: /api/v2/graphql/graphql). */
 const GRAPHQL_URL = "https://rata.digitraffic.fi/api/v2/graphql/graphql";
@@ -115,12 +115,15 @@ export function buildRouteQuery(date: string): string {
 }
 
 /**
- * Fetch trains for Lempäälä–Tampere route for today via GraphQL v2 (single query).
+ * Fetch trains for Lempäälä–Tampere route for a given date via GraphQL v2 (single query).
  * Returns only trains that stop at Lempäälä (trainStopping === true at Lempäälä). Direction is derived from which departure (Lempäälä or Tampere) is earlier.
+ * Use a weekday date to get weekday-only trains (app shows only weekday trains).
  */
-export async function fetchRouteTodayGraphQL(): Promise<RouteTrainInfo[]> {
-  const date = getTodayFinnish();
-  const query = buildRouteQuery(date);
+export async function fetchRouteTodayGraphQL(
+  date?: string
+): Promise<RouteTrainInfo[]> {
+  const queryDate = date ?? getReferenceWeekdayDate();
+  const query = buildRouteQuery(queryDate);
 
   const res = await fetch(GRAPHQL_URL, {
     method: "POST",
@@ -178,12 +181,30 @@ export interface RouteTodayStorage {
   trains: RouteTrainInfo[];
 }
 
+const ROUTE_WEEKDAY_STORAGE_KEY = "train:route:weekday";
+
 /**
  * Read today's route data from localStorage.
  * Returns null if missing or invalid. Use date (YYYY-MM-DD) for the key train:route:today:{date}.
  */
 export function getRouteTodayFromStorage(date: string): RouteTodayStorage | null {
   const raw = localStorage.getItem(`train:route:today:${date}`);
+  if (!raw) return null;
+  try {
+    const payload = JSON.parse(raw) as RouteTodayStorage;
+    if (!payload?.date || !Array.isArray(payload.trains)) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Read weekday route data from localStorage (trains that run on weekdays only).
+ * Returns null if missing or invalid. Key: train:route:weekday.
+ */
+export function getRouteWeekdayFromStorage(): RouteTodayStorage | null {
+  const raw = localStorage.getItem(ROUTE_WEEKDAY_STORAGE_KEY);
   if (!raw) return null;
   try {
     const payload = JSON.parse(raw) as RouteTodayStorage;
@@ -231,8 +252,9 @@ export function filterReturnOptions(
 }
 
 /**
- * Run one-time route fetch for today: fetch via GraphQL v2 and save to localStorage.
- * Idempotent per day (train:route:fetched flag). Stores all trains from the single query (both directions).
+ * Run one-time route fetch for weekday trains: fetch via GraphQL v2 for a reference weekday and save to localStorage.
+ * Idempotent per day (train:route:fetched flag). Uses getReferenceWeekdayDate() so the list contains only weekday trains.
+ * Stores under train:route:weekday so the dropdown shows weekday trains every day (including weekends).
  */
 export async function runRouteFetchOnce(): Promise<void> {
   const today = getTodayFinnish();
@@ -243,10 +265,11 @@ export async function runRouteFetchOnce(): Promise<void> {
   }
 
   try {
-    const trains = await fetchRouteTodayGraphQL();
-    const payload: RouteTodayStorage = { date: today, trains };
+    const refDate = getReferenceWeekdayDate();
+    const trains = await fetchRouteTodayGraphQL(refDate);
+    const payload: RouteTodayStorage = { date: refDate, trains };
 
-    localStorage.setItem(`train:route:today:${today}`, JSON.stringify(payload));
+    localStorage.setItem(ROUTE_WEEKDAY_STORAGE_KEY, JSON.stringify(payload));
     localStorage.setItem(flagKey, today);
   } catch {
     // Silent: no UI, no throw

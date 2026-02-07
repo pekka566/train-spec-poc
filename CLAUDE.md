@@ -65,9 +65,10 @@ src/
 - **Max API calls**: 30 per fetch (enforced before fetching)
 
 ### GraphQL (route fetch)
-- **Usage**: Run once per day to fetch today's route trains (Lempäälä–Tampere) for the train selection dropdowns; implementation in `src/utils/apiGraphql.ts`.
+- **Usage**: Run once per day to fetch **weekday** route trains (Lempäälä–Tampere) for the train selection dropdowns; implementation in `src/utils/apiGraphql.ts`. The app shows only weekday trains; the fetch uses a **reference weekday date** (today if Mon–Fri, else next Monday) so the API returns weekday-only trains.
 - **Endpoint**: `POST https://rata.digitraffic.fi/api/v2/graphql/graphql`, headers `Content-Type: application/json`, `Accept-Encoding: gzip`.
 - **Query**: `trainsByDepartureDate(departureDate, where: …)`; request `trainNumber`, `trainType.name`, `timeTableRows(where: Lempäälä or Tampere asema)` including `type`, `scheduledTime`, `station { name }`, `trainStopping`. Only trains with a stop at Lempäälä (`trainStopping === true`) are stored.
+- **Storage**: Weekday route is stored under `train:route:weekday`; read via `getRouteWeekdayFromStorage()`.
 - **API documentation**: [Digitraffic – Railway traffic](https://www.digitraffic.fi/rautatieliikenne/) (REST APIs → GraphQL, Train data, Response types → Trains / timeTableRows).
 - **Try queries**: [GraphiQL](https://rata.digitraffic.fi/api/v2/graphql/graphiql).
 

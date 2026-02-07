@@ -5,6 +5,7 @@ import {
   getWeekdaysInRange,
   isToday,
   getTodayFinnish,
+  getReferenceWeekdayDate,
 } from "./dateUtils";
 
 describe("dateUtils", () => {
@@ -96,6 +97,36 @@ describe("dateUtils", () => {
     it("returns today in Finnish timezone", () => {
       vi.setSystemTime(new Date("2026-02-03T12:00:00+02:00"));
       expect(getTodayFinnish()).toBe("2026-02-03");
+    });
+  });
+
+  describe("getReferenceWeekdayDate", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("returns today when today is Monday", () => {
+      vi.setSystemTime(new Date("2026-02-02T12:00:00+02:00"));
+      expect(getReferenceWeekdayDate()).toBe("2026-02-02");
+    });
+
+    it("returns today when today is Friday", () => {
+      vi.setSystemTime(new Date("2026-01-30T12:00:00+02:00"));
+      expect(getReferenceWeekdayDate()).toBe("2026-01-30");
+    });
+
+    it("returns next Monday when today is Saturday", () => {
+      vi.setSystemTime(new Date("2026-01-31T12:00:00+02:00"));
+      expect(getReferenceWeekdayDate()).toBe("2026-02-02");
+    });
+
+    it("returns next Monday when today is Sunday", () => {
+      vi.setSystemTime(new Date("2026-02-01T12:00:00+02:00"));
+      expect(getReferenceWeekdayDate()).toBe("2026-02-02");
     });
   });
 });

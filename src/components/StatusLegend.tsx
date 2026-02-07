@@ -26,6 +26,7 @@ function LegendItem({ color, label }: StatusLegendItem) {
       <Box
         w={12}
         h={12}
+        aria-hidden
         style={{
           backgroundColor: `var(--mantine-color-${color})`,
           borderRadius: "var(--mantine-radius-xs)",

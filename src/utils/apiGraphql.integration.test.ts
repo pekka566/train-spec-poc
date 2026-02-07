@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { fetchRouteTodayGraphQL, buildRouteQuery } from "./apiGraphql";
+import {
+  fetchRouteTodayGraphQL,
+  buildRouteQuery,
+  runRouteFetchOnce,
+  getRouteWeekdayFromStorage,
+} from "./apiGraphql";
 
 /** Mock timeTableRow shape; trainStopping must be true at Lempäälä for train to be included. */
 type MockRow = {
@@ -74,7 +79,7 @@ describe("apiGraphql integration", () => {
     "fetchRouteTodayGraphQL parses response into RouteTrainInfo[] for both directions",
     { timeout: 5000 },
     async () => {
-      const result = await fetchRouteTodayGraphQL();
+      const result = await fetchRouteTodayGraphQL("2026-01-29");
 
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBe(2);
@@ -130,7 +135,7 @@ describe("apiGraphql integration", () => {
         });
       })
     );
-    const result = await fetchRouteTodayGraphQL();
+    const result = await fetchRouteTodayGraphQL("2026-01-29");
     expect(result).toHaveLength(1);
     expect(result[0]!.trainNumber).toBe(1719);
     vi.unstubAllGlobals();
@@ -160,10 +165,23 @@ describe("apiGraphql integration", () => {
         });
       })
     );
-    const result = await fetchRouteTodayGraphQL();
+    const result = await fetchRouteTodayGraphQL("2026-01-29");
     expect(result).toHaveLength(1);
     expect(result[0]!.trainNumber).toBe(1719);
     vi.unstubAllGlobals();
+  });
+
+  it("runRouteFetchOnce stores weekday route and getRouteWeekdayFromStorage reads it", async () => {
+    localStorage.removeItem("train:route:weekday");
+    localStorage.removeItem("train:route:fetched");
+    await runRouteFetchOnce();
+    const stored = getRouteWeekdayFromStorage();
+    expect(stored).not.toBeNull();
+    expect(stored!.trains).toHaveLength(2);
+    expect(stored!.date).toBeDefined();
+    const byNumber = Object.fromEntries(stored!.trains.map((r) => [r.trainNumber, r]));
+    expect(byNumber[1719]).toBeDefined();
+    expect(byNumber[9700]).toBeDefined();
   });
 
   it(
@@ -173,7 +191,7 @@ describe("apiGraphql integration", () => {
       vi.unstubAllGlobals();
       let result: Awaited<ReturnType<typeof fetchRouteTodayGraphQL>> | undefined;
       try {
-        result = await fetchRouteTodayGraphQL();
+        result = await fetchRouteTodayGraphQL("2026-01-29");
       } catch (err) {
         if (err instanceof TypeError && (err.message === "fetch failed" || err.message.includes("ENOTFOUND"))) {
           return;

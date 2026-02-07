@@ -21,14 +21,13 @@ import { DataTable } from "@/components/DataTable";
 import { useTrainData } from "@/hooks/useTrainData";
 import {
   runRouteFetchOnce,
-  getRouteTodayFromStorage,
+  getRouteWeekdayFromStorage,
   getRouteTrainsByDirection,
   filterReturnOptions,
   type RouteTrainInfo,
 } from "@/utils/apiGraphql";
 import {
   getDefaultDateRange,
-  getTodayFinnish,
   formatFinnishTime,
 } from "@/utils/dateUtils";
 import { computeSummary, filterByTrain } from "@/utils/statsCalculator";
@@ -56,12 +55,12 @@ function App() {
   const [endDate, setEndDate] = useState(defaultRange.endDate);
   const [activeTab, setActiveTab] = useState<TabValue>("summary");
   const routeFetchStartedRef = useRef(false);
+  const mainContentRef = useRef<HTMLDivElement>(null);
   const [routeStorageRevision, setRouteStorageRevision] = useState(0);
-  const today = getTodayFinnish();
 
   const routeStorage = useMemo(
-    () => getRouteTodayFromStorage(today),
-    [today, routeStorageRevision],
+    () => getRouteWeekdayFromStorage(),
+    [routeStorageRevision],
   );
   const { outbound: outboundList, return: returnList } = useMemo(() => {
     if (!routeStorage?.trains?.length) return { outbound: [], return: [] };
@@ -137,6 +136,22 @@ function App() {
     fetch,
     hasFetched,
   } = useTrainData(startDate, endDate, trainNumbers);
+
+  const contentVisible =
+    !error && !(tooManyApiCalls && hasFetched) && !isLoading;
+  const prevContentVisibleRef = useRef(contentVisible);
+  useEffect(() => {
+    if (contentVisible && !prevContentVisibleRef.current) {
+      const el = mainContentRef.current;
+      if (el) {
+        const id = requestAnimationFrame(() => {
+          el.focus({ preventScroll: true });
+        });
+        return () => cancelAnimationFrame(id);
+      }
+    }
+    prevContentVisibleRef.current = contentVisible;
+  }, [contentVisible]);
 
   const morningRecords = filterByTrain(data, trainNumbers[0]);
   const eveningRecords = filterByTrain(data, trainNumbers[1]);
@@ -282,11 +297,27 @@ function App() {
         styles={{
           root: {
             position: "absolute",
-            left: "-9999px",
+            width: 1,
+            height: 1,
+            padding: 0,
+            margin: -1,
+            overflow: "hidden",
+            clip: "rect(0, 0, 0, 0)",
+            whiteSpace: "nowrap",
+            border: 0,
             zIndex: 9999,
             "&:focus, &:focus-visible": {
+              width: "auto",
+              height: "auto",
+              padding: "var(--mantine-spacing-xs) var(--mantine-spacing-sm)",
+              margin: 0,
+              overflow: "visible",
+              clip: "auto",
+              whiteSpace: "normal",
               left: "0.5rem",
               position: "fixed",
+              background: "var(--mantine-color-default)",
+              border: "1px solid var(--mantine-color-default-border)",
             },
           },
         }}
@@ -301,7 +332,12 @@ function App() {
         </Box>
 
         {/* Main: date picker, tabs, content */}
-        <Box component="main" id="main-content" tabIndex={-1}>
+        <Box
+          component="main"
+          id="main-content"
+          ref={mainContentRef}
+          tabIndex={-1}
+        >
           <Stack gap="lg">
             <DateRangePicker
               startDate={startDate}

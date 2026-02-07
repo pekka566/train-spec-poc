@@ -18,6 +18,7 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
         <Tabs.Tab
           value="summary"
           id="tab-summary"
+          aria-controls="summary-panel"
           leftSection={<IconChartBar size={16} aria-hidden />}
         >
           Summary
@@ -25,6 +26,7 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
         <Tabs.Tab
           value="table"
           id="tab-table"
+          aria-controls="table-panel"
           leftSection={<IconTable size={16} aria-hidden />}
         >
           Table

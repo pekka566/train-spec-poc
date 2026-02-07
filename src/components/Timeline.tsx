@@ -59,7 +59,12 @@ export function Timeline({
             No data available for this train in the selected date range.
           </Text>
         ) : (
-          <Group gap="xs" wrap="wrap">
+          <Group
+            gap="xs"
+            wrap="wrap"
+            role="group"
+            aria-label="Punctuality by date"
+          >
             {sortedRecords.map((record) => (
               <Tooltip
                 key={record.date}

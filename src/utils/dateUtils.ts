@@ -25,6 +25,22 @@ export function getTodayFinnish(): string {
 }
 
 /**
+ * Get a reference weekday date for route fetching: today if Mon–Fri, otherwise next Monday.
+ * Used so the route list always shows weekday trains (API returns trains for the given date).
+ * dayjs .day(): 0 = Sun, 1 = Mon, …, 6 = Sat.
+ */
+export function getReferenceWeekdayDate(): string {
+  const now = dayjs().tz(FINNISH_TIMEZONE);
+  const day = now.day();
+  if (day >= 1 && day <= 5) {
+    return now.format("YYYY-MM-DD");
+  }
+  // Saturday (6) → +2 days; Sunday (0) → +1 day
+  const daysUntilMonday = day === 0 ? 1 : 2;
+  return now.add(daysUntilMonday, "day").format("YYYY-MM-DD");
+}
+
+/**
  * Check if a date string (YYYY-MM-DD) is today in Finnish timezone
  */
 export function isToday(date: string): boolean {

@@ -50,16 +50,36 @@ export function DataTable({ train, records }: DataTableProps) {
         </Title>
 
         <ScrollArea>
-          <Table striped highlightOnHover>
+          <Table striped highlightOnHover aria-label="Punctuality by date">
+            <Table.Caption>
+              <span
+                style={{
+                  position: "absolute",
+                  width: 1,
+                  height: 1,
+                  padding: 0,
+                  margin: -1,
+                  overflow: "hidden",
+                  clip: "rect(0,0,0,0)",
+                  whiteSpace: "nowrap",
+                  border: 0,
+                }}
+              >
+                Punctuality by date for selected train
+              </span>
+            </Table.Caption>
             <Table.Thead>
               <Table.Tr>
                 <Table.Th
-                  aria-sort={
-                    sortAscending ? "ascending" : "descending"
-                  }
+                  aria-sort={sortAscending ? "ascending" : "descending"}
                 >
                   <UnstyledButton
                     onClick={toggleSort}
+                    aria-label={
+                      sortAscending
+                        ? "Sort by date, ascending"
+                        : "Sort by date, descending"
+                    }
                     style={{
                       cursor: "pointer",
                       userSelect: "none",
@@ -84,7 +104,9 @@ export function DataTable({ train, records }: DataTableProps) {
                   <Table.Td>
                     {record.trainType} {record.trainNumber}
                   </Table.Td>
-                  <Table.Td>{formatFinnishTime(record.scheduledDeparture)}</Table.Td>
+                  <Table.Td>
+                    {formatFinnishTime(record.scheduledDeparture)}
+                  </Table.Td>
                   <Table.Td>
                     {record.cancelled
                       ? "-"
@@ -96,11 +118,7 @@ export function DataTable({ train, records }: DataTableProps) {
                     {record.cancelled ? (
                       "-"
                     ) : (
-                      <Text
-                        span
-                        c={statusColors[record.status]}
-                        fw={500}
-                      >
+                      <Text span c={statusColors[record.status]} fw={500}>
                         {record.delayMinutes > 0
                           ? `+${record.delayMinutes}min`
                           : "0min"}
