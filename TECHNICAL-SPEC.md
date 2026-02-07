@@ -155,7 +155,7 @@ curl 'https://rata.digitraffic.fi/api/v1/trains/2026-01-30/9700' --compressed
 - **Train type filter:** Only commuter and long-distance train types are included. Allowed types: `HL`, `HV`, `HLV`, `H`, `PVS`, `P`, `HDM`, `PVV`, `S`, `V`, `IC2`, `IC`, `HSM`, `AE`, `PYO`, `MV`, `MUS` (source: Digitraffic `/api/v1/metadata/train-types`, categories "Commuter" and "Long-distance"). Trains with other types (e.g. shunting, test) are excluded.
 - **Storage:** Key `train:route:weekday`, value `{ date: string, trains: RouteTrainInfo[] }`. `RouteTrainInfo` includes `trainNumber`, `stationName` (departure station), `scheduledDeparture`, and `direction` (`"Lempäälä → Tampere"` | `"Tampere → Lempäälä"`). Only trains that stop at Lempäälä are stored (both directions). No full TrainRecord or full timeTableRows is stored.
 - **Idempotence:** Per-day flag `train:route:fetched` set to today's date (Finnish timezone) after a successful fetch, so the fetch runs at most once per day; the ref in App ensures at most one in-flight run per load.
-- **Error handling:** Silently fails (no UI notification, no throw) — the app falls back to default trains (1719, 9700).
+- **Error handling:** On failure, `runRouteFetchOnce()` logs to `console.warn` and re-throws the error. App.tsx catches it and shows a red `Alert` in the content area with title "Failed to load train routes", the error message, and a Retry button. While the route fetch is in progress, a centered `Loader` spinner with "Loading train routes..." text is shown, and the Fetch Data button is disabled. If the fetch fails, the app does not fall back to default trains; the user must retry or proceed with cached route data if available.
 
 ### Train selection (route data for selects)
 

@@ -168,7 +168,7 @@ Stored route items (e.g. `RouteTrainInfo`) include at least: **train number**, *
 - **Single-page:** header, date range picker, **two selects** (Outbound train, Return train) with options in format hh:mm (train number), a "Fetch Data" button, **tab navigation** (Summary | Table), and a content area that shows one of the two views. Data is fetched only when the user clicks Fetch Data (no automatic fetch on load). **Before the first fetch**, show a prompt text: "Select a date range and click "Fetch Data" to load train data." Footer text: "Data: Digitraffic / Fintraffic - Weekdays only" (plain hyphen, not bullet).
 - **Summary**: Two cards (selected outbound train, selected return train) with statistics and a proportion bar, plus day-by-day colored timelines for both trains. Headings use the selected train's departure time and number, e.g. "08:20 (1719) – Lempäälä → Tampere".
 - **Table**: Sortable list of all records for the two selected trains.
-- **Loading and errors**: A loading indicator while data is fetched; an error message if the API fails; an empty state if no data for the range.
+- **Loading and errors**: A loading indicator while data is fetched; an error message if the API fails; an empty state if no data for the range. Additionally, a loading spinner is shown while the one-time route fetch is in progress ("Loading train routes..."), and if the route fetch fails, an error Alert with a Retry button is shown. The Fetch Data button is disabled until the route fetch completes.
 - **Visual design** (layout, components, colors, responsive behaviour) is defined in [VISUAL-SPEC.md](VISUAL-SPEC.md).
 
 ## Acceptance Criteria

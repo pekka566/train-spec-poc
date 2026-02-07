@@ -21,14 +21,12 @@ interface DateRangePickerProps {
   onOutboundChange: (train: RouteTrainInfo | null) => void;
   onReturnChange: (train: RouteTrainInfo | null) => void;
   noRouteData: boolean;
+  isRouteLoading: boolean;
 }
 
 function optionLabel(t: RouteTrainInfo): string {
   return `${formatFinnishTime(t.scheduledDeparture)} (${t.trainNumber})`;
 }
-
-const byTime = (a: RouteTrainInfo, b: RouteTrainInfo) =>
-  a.scheduledDeparture.localeCompare(b.scheduledDeparture);
 
 export function DateRangePicker({
   startDate,
@@ -46,6 +44,7 @@ export function DateRangePicker({
   onOutboundChange,
   onReturnChange,
   noRouteData,
+  isRouteLoading,
 }: DateRangePickerProps) {
   const today = getTodayFinnish();
   const maxDate = dayjs(today).toDate();
@@ -62,18 +61,14 @@ export function DateRangePicker({
     }
   };
 
-  const outboundData = [...outboundOptions]
-    .sort(byTime)
-    .map((t) => ({
-      value: String(t.trainNumber),
-      label: optionLabel(t),
-    }));
-  const returnData = [...returnOptions]
-    .sort(byTime)
-    .map((t) => ({
-      value: String(t.trainNumber),
-      label: optionLabel(t),
-    }));
+  const outboundData = outboundOptions.map((t) => ({
+    value: String(t.trainNumber),
+    label: optionLabel(t),
+  }));
+  const returnData = returnOptions.map((t) => ({
+    value: String(t.trainNumber),
+    label: optionLabel(t),
+  }));
 
   return (
     <Stack gap="xs">
@@ -98,7 +93,7 @@ export function DateRangePicker({
         />
         <Select
           label="Outbound train"
-          placeholder={noRouteData ? "No route data" : undefined}
+          placeholder={isRouteLoading ? "Loading..." : noRouteData ? "No route data" : undefined}
           data={outboundData}
           value={selectedOutbound ? String(selectedOutbound.trainNumber) : null}
           onChange={(value) => {
@@ -107,14 +102,14 @@ export function DateRangePicker({
               : null;
             onOutboundChange(train ?? null);
           }}
-          disabled={noRouteData}
+          disabled={noRouteData || isRouteLoading}
           clearable={false}
           size="sm"
           style={{ minWidth: 140 }}
         />
         <Select
           label="Return train"
-          placeholder={noRouteData ? "No route data" : undefined}
+          placeholder={isRouteLoading ? "Loading..." : noRouteData ? "No route data" : undefined}
           data={returnData}
           value={selectedReturn ? String(selectedReturn.trainNumber) : null}
           onChange={(value) => {
@@ -123,7 +118,7 @@ export function DateRangePicker({
               : null;
             onReturnChange(train ?? null);
           }}
-          disabled={noRouteData}
+          disabled={noRouteData || isRouteLoading}
           clearable={false}
           size="sm"
           style={{ minWidth: 140 }}
@@ -131,7 +126,7 @@ export function DateRangePicker({
         <Button
           onClick={onFetch}
           loading={isLoading}
-          disabled={tooManyApiCalls}
+          disabled={tooManyApiCalls || isRouteLoading}
           leftSection={<IconSearch size={16} aria-hidden />}
           style={{ alignSelf: "flex-end" }}
         >

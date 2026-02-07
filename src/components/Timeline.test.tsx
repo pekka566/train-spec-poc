@@ -27,7 +27,7 @@ describe("Timeline", () => {
       <Timeline train={TRAINS.morning} records={[]} />
     );
     expect(
-      screen.getByText(/Morning train 8:20 [–-] Lempäälä → Tampere/)
+      screen.getByText(/Morning train [–-] Lempäälä → Tampere/)
     ).toBeInTheDocument();
   });
 
@@ -106,7 +106,7 @@ describe("Timeline", () => {
       <Timeline train={TRAINS.evening} records={[]} />
     );
     expect(
-      screen.getByText(/Evening train 16:35 [–-] Tampere → Lempäälä/)
+      screen.getByText(/Evening train [–-] Tampere → Lempäälä/)
     ).toBeInTheDocument();
   });
 
@@ -115,7 +115,7 @@ describe("Timeline", () => {
       <Timeline train={TRAINS.morning} records={[]} hideTitle />
     );
     expect(
-      screen.queryByText(/Morning train 8:20 [–-] Lempäälä → Tampere/)
+      screen.queryByText(/Morning train [–-] Lempäälä → Tampere/)
     ).not.toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import {
   Container,
   Title,
@@ -34,11 +34,12 @@ import { computeSummary, filterByTrain } from "@/utils/statsCalculator";
 import { getTrainTitle } from "@/utils/trainUtils";
 import { TRAINS, type TrainConfig } from "@/types/train";
 import type { TrainNumbers } from "@/utils/trainStorage";
+import { STATION_CODES } from "@/constants/stations";
 
 function routeTrainToTrainConfig(route: RouteTrainInfo): TrainConfig {
   const time = formatFinnishTime(route.scheduledDeparture);
-  const from = route.direction === "Lempäälä → Tampere" ? "LPÄ" : "TPE";
-  const to = route.direction === "Lempäälä → Tampere" ? "TPE" : "LPÄ";
+  const from = route.direction === "Lempäälä → Tampere" ? STATION_CODES.LEMPÄÄLÄ : STATION_CODES.TAMPERE;
+  const to = route.direction === "Lempäälä → Tampere" ? STATION_CODES.TAMPERE : STATION_CODES.LEMPÄÄLÄ;
   return {
     number: route.trainNumber,
     name: `${time} (${route.trainNumber})`,
@@ -57,6 +58,8 @@ function App() {
   const routeFetchStartedRef = useRef(false);
   const mainContentRef = useRef<HTMLDivElement>(null);
   const [routeStorageRevision, setRouteStorageRevision] = useState(0);
+  const [isRouteLoading, setIsRouteLoading] = useState(true);
+  const [routeError, setRouteError] = useState<Error | null>(null);
 
   const routeStorage = useMemo(
     () => getRouteWeekdayFromStorage(),
@@ -74,13 +77,24 @@ function App() {
     null,
   );
 
+  const doRouteFetch = useCallback(() => {
+    setIsRouteLoading(true);
+    setRouteError(null);
+    runRouteFetchOnce()
+      .then(() => setRouteStorageRevision((r) => r + 1))
+      .catch((err) => {
+        setRouteError(
+          err instanceof Error ? err : new Error(String(err)),
+        );
+      })
+      .finally(() => setIsRouteLoading(false));
+  }, []);
+
   useEffect(() => {
     if (routeFetchStartedRef.current) return;
     routeFetchStartedRef.current = true;
-    runRouteFetchOnce().then(() =>
-      setRouteStorageRevision((r) => r + 1),
-    );
-  }, []);
+    doRouteFetch();
+  }, [doRouteFetch]);
 
   useEffect(() => {
     if (outboundList.length > 0 && !selectedOutbound) {
@@ -160,7 +174,43 @@ function App() {
   const morningSummary = computeSummary(morningRecords);
   const eveningSummary = computeSummary(eveningRecords);
 
+  const retryRouteFetch = useCallback(() => {
+    routeFetchStartedRef.current = false;
+    doRouteFetch();
+  }, [doRouteFetch]);
+
   const renderContent = () => {
+    // Show route fetch error
+    if (routeError) {
+      return (
+        <Alert
+          icon={<IconAlertCircle size={16} aria-hidden />}
+          title="Failed to load train routes"
+          color="red"
+          variant="light"
+        >
+          {routeError.message}
+          <Box mt="sm">
+            <Button variant="light" size="sm" onClick={retryRouteFetch}>
+              Retry
+            </Button>
+          </Box>
+        </Alert>
+      );
+    }
+
+    // Show route loading spinner
+    if (isRouteLoading) {
+      return (
+        <Center py="xl" role="status" aria-live="polite" aria-atomic="true">
+          <Stack align="center" gap="sm">
+            <Loader size="lg" aria-hidden />
+            <Text c="dimmed">Loading train routes...</Text>
+          </Stack>
+        </Center>
+      );
+    }
+
     // Show error state
     if (error) {
       return (
@@ -356,6 +406,7 @@ function App() {
               onOutboundChange={setSelectedOutbound}
               onReturnChange={setSelectedReturn}
               noRouteData={!routeStorage?.trains?.length}
+              isRouteLoading={isRouteLoading}
             />
 
             <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />

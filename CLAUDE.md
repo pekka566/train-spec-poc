@@ -153,7 +153,7 @@ User selects dates/trains → clicks Fetch → useTrainData:
 - **Query**: `trainsByDepartureDate(departureDate, where: …)`; request `trainNumber`, `trainType.name`, `timeTableRows(where: Lempäälä or Tampere asema)` including `type`, `scheduledTime`, `station { name }`, `trainStopping`. Only trains with a stop at Lempäälä (`trainStopping === true`) are stored.
 - **Direction derivation**: Compares DEPARTURE timestamps at Lempäälä vs Tampere to determine direction.
 - **Storage**: Weekday route stored under `train:route:weekday`; idempotent fetch flag `train:route:fetched`; read via `getRouteWeekdayFromStorage()`.
-- **Error handling**: Silently fails (no UI notification) — the app falls back to default trains.
+- **Error handling**: On failure, `runRouteFetchOnce()` logs to `console.warn` and re-throws. App.tsx catches it and shows a red Alert ("Failed to load train routes") with error message and Retry button. A loading spinner ("Loading train routes...") is shown during the fetch, and the Fetch Data button is disabled until the route fetch completes.
 - **API documentation**: [Digitraffic – Railway traffic](https://www.digitraffic.fi/rautatieliikenne/) (REST APIs → GraphQL, Train data, Response types → Trains / timeTableRows).
 - **Try queries**: [GraphiQL](https://rata.digitraffic.fi/api/v2/graphql/graphiql).
 
@@ -174,4 +174,5 @@ User selects dates/trains → clicks Fetch → useTrainData:
 - **Run all tests** and ensure they pass: `pnpm test -- --run`
 - **Run test coverage report**: `pnpm test:coverage`. If the report shows uncovered lines or branches, **ask the user** whether to write tests to cover them before considering the change complete.
 - **Run build** and ensure it succeeds: `pnpm build`
-- Do not consider a change complete until lint passes, tests pass, coverage has been checked (and any requested coverage gaps addressed), and build succeeds.
+- **Check spec sync**: After every change, verify that the spec files ([FUNCTIONAL-SPEC.md](FUNCTIONAL-SPEC.md), [TECHNICAL-SPEC.md](TECHNICAL-SPEC.md), [VISUAL-SPEC.md](VISUAL-SPEC.md)) are in sync with the implementation. If they are not, **ask the user** whether to update the specs or the implementation.
+- Do not consider a change complete until lint passes, tests pass, coverage has been checked (and any requested coverage gaps addressed), build succeeds, and specs are verified in sync.

@@ -72,8 +72,8 @@ export function Timeline({
                 label={getTooltipContent(record)}
                 withArrow
               >
-                <button
-                  type="button"
+                <div
+                  role="img"
                   aria-label={getTooltipContent(record)}
                   style={{
                     width: 44,
@@ -86,7 +86,6 @@ export function Timeline({
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
-                    cursor: "pointer",
                   }}
                 >
                   <Text size="sm" fw={600} c="white">
@@ -95,7 +94,7 @@ export function Timeline({
                   <Text size="xs" c="white" opacity={0.8}>
                     {record.date.slice(8)}
                   </Text>
-                </button>
+                </div>
               </Tooltip>
             ))}
           </Group>

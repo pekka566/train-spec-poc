@@ -1,11 +1,13 @@
 import { getTodayFinnish, getReferenceWeekdayDate } from "./dateUtils";
+import { cleanupOldStorage } from "./trainStorage";
+import { STATION_NAMES } from "@/constants/stations";
 
 /** Digitraffic GraphQL v2 POST endpoint (per FI docs: /api/v2/graphql/graphql). */
 const GRAPHQL_URL = "https://rata.digitraffic.fi/api/v2/graphql/graphql";
 
 /** Station names used for filtering (Digitraffic: Tampere asema). */
-const STATION_LEMPÄÄLÄ = "Lempäälä";
-const STATION_TAMPERE = "Tampere asema";
+const STATION_LEMPÄÄLÄ = STATION_NAMES.LEMPÄÄLÄ;
+const STATION_TAMPERE = STATION_NAMES.TAMPERE;
 
 /**
  * Train types to include: Commuter (HL, HV, HLV) and Long-distance (H, PVS, P, HDM, PVV, S, V, IC2, IC, HSM, AE, PYO, MV, MUS).
@@ -271,7 +273,9 @@ export async function runRouteFetchOnce(): Promise<void> {
 
     localStorage.setItem(ROUTE_WEEKDAY_STORAGE_KEY, JSON.stringify(payload));
     localStorage.setItem(flagKey, today);
-  } catch {
-    // Silent: no UI, no throw
+    cleanupOldStorage();
+  } catch (err) {
+    console.warn("Route fetch failed:", err);
+    throw err;
   }
 }

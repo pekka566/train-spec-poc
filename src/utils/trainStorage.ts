@@ -1,11 +1,39 @@
 import type { TrainRecord } from "@/types/train";
 import { getTrainStatus } from "./api";
 import { getWeekdaysInRange, isToday } from "./dateUtils";
+import dayjs from "dayjs";
 
 /** Two train numbers: [outbound, return] for API and cache. */
 export type TrainNumbers = [number, number];
 
 const STORAGE_PREFIX = "train";
+
+/** Maximum age in days for cached train data in localStorage. */
+const MAX_CACHE_AGE_DAYS = 90;
+
+/**
+ * Remove localStorage entries for train data older than MAX_CACHE_AGE_DAYS.
+ * Only removes keys matching the pattern "train:YYYY-MM-DD:number".
+ */
+export function cleanupOldStorage(): void {
+  const cutoff = dayjs().subtract(MAX_CACHE_AGE_DAYS, "day").format("YYYY-MM-DD");
+  const keysToRemove: string[] = [];
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key?.startsWith(`${STORAGE_PREFIX}:`)) continue;
+    // Match pattern "train:YYYY-MM-DD:number" but not "train:route:*"
+    const match = key.match(/^train:(\d{4}-\d{2}-\d{2}):\d+$/);
+    const dateStr = match?.[1];
+    if (dateStr && dateStr < cutoff) {
+      keysToRemove.push(key);
+    }
+  }
+
+  for (const key of keysToRemove) {
+    localStorage.removeItem(key);
+  }
+}
 
 /**
  * Generate storage key for a train record

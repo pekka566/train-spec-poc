@@ -211,6 +211,35 @@ Mobile adaptations:
 - Timeline cells wrap to multiple rows within each timeline card (Group with `wrap="wrap"`)
 ```
 
+### Route Loading State
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│                        ⟳ (spinner)                              │
+│                  Loading train routes...                        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+Shown in the content area while the one-time GraphQL route fetch is in progress. Centered Mantine `Loader` (size="lg") with "Loading train routes..." text below. Container has `role="status"` and `aria-live="polite"`. During this state, the Fetch Data button and train selection dropdowns are disabled.
+
+### Route Fetch Error State
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│                ⚠️  Failed to load train routes                  │
+│                                                                 │
+│           GraphQL error: 500 Internal Server Error              │
+│                                                                 │
+│                    [ 🔄 Retry ]                                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+Shown when the GraphQL route fetch fails. Red Mantine `Alert` (variant="light") with title "Failed to load train routes", the error message, and a Retry button. Clicking Retry re-triggers the route fetch.
+
 ### Loading State
 
 ```

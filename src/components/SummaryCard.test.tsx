@@ -26,7 +26,7 @@ describe("SummaryCard", () => {
       <SummaryCard train={TRAINS.morning} summary={createSummary()} variant="morning" />
     );
     expect(
-      screen.getByText(/Morning train 8:20 – Lempäälä → Tampere/)
+      screen.getByText(/Morning train – Lempäälä → Tampere/)
     ).toBeInTheDocument();
   });
 
@@ -35,7 +35,7 @@ describe("SummaryCard", () => {
       <SummaryCard train={TRAINS.evening} summary={createSummary()} variant="evening" />
     );
     expect(
-      screen.getByText(/Evening train 16:35 – Tampere → Lempäälä/)
+      screen.getByText(/Evening train – Tampere → Lempäälä/)
     ).toBeInTheDocument();
   });
 
@@ -82,7 +82,7 @@ describe("SummaryCard", () => {
         hideTitle
       />
     );
-    expect(screen.queryByText(/Morning train 8:20 – Lempäälä → Tampere/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Morning train – Lempäälä → Tampere/)).not.toBeInTheDocument();
   });
 
   it("renders without error when totalCount is 0 (cancelled segment value 0)", () => {

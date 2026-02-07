@@ -62,6 +62,16 @@ describe("api", () => {
       expect(result).toBeNull();
     });
 
+    it("returns null for unexpected JSON structure", async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve([{ foo: "bar" }]),
+      } as Response);
+
+      const result = await fetchTrain("2026-01-27", 1719);
+      expect(result).toBeNull();
+    });
+
     it("throws on other HTTP errors", async () => {
       vi.mocked(fetch).mockResolvedValue({
         ok: false,

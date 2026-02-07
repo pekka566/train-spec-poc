@@ -17,7 +17,7 @@ describe("getTrainTitle", () => {
     );
   });
 
-  it("formats train without parentheses as name + scheduledTime – direction", () => {
+  it("formats train without parentheses as name – direction", () => {
     const train: TrainConfig = {
       number: 1719,
       name: "Morning train 8:20",
@@ -27,7 +27,7 @@ describe("getTrainTitle", () => {
       direction: "Lempäälä → Tampere",
     };
     expect(getTrainTitle(train)).toBe(
-      "Morning train 8:20 08:20 – Lempäälä → Tampere"
+      "Morning train 8:20 – Lempäälä → Tampere"
     );
   });
 });

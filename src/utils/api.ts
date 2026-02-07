@@ -1,6 +1,7 @@
 import type { TrainResponse, TrainRecord, TrainStatus, TimeTableRow } from "@/types/train";
 import { TRAINS } from "@/types/train";
 import type { RouteDirection } from "@/utils/apiGraphql";
+import { STATION_CODES } from "@/constants/stations";
 
 const API_BASE = "https://rata.digitraffic.fi/api/v1";
 
@@ -29,7 +30,16 @@ export async function fetchTrain(
     return null;
   }
 
-  return data[0] as TrainResponse;
+  const item = data[0];
+  if (
+    typeof item !== "object" ||
+    item === null ||
+    typeof item.trainNumber !== "number" ||
+    !Array.isArray(item.timeTableRows)
+  ) {
+    return null;
+  }
+  return item as TrainResponse;
 }
 
 /**
@@ -49,9 +59,9 @@ export function getStationCodesByDirection(
   direction: RouteDirection
 ): { from: string; to: string } {
   if (direction === "Lempäälä → Tampere") {
-    return { from: "LPÄ", to: "TPE" };
+    return { from: STATION_CODES.LEMPÄÄLÄ, to: STATION_CODES.TAMPERE };
   }
-  return { from: "TPE", to: "LPÄ" };
+  return { from: STATION_CODES.TAMPERE, to: STATION_CODES.LEMPÄÄLÄ };
 }
 
 /**
