@@ -47,6 +47,8 @@ flowchart LR
 - **Data flow**: User selects date range and clicks "Fetch" → (1) compute weekdays in range (end not in future); (2) for each (date, trainNumber) in that set, determine if an API call is needed: **yes** if date is today, or if date is not today and there is no valid data in local storage for that (date, trainNumber); (3) **needed API calls** = number of such pairs; if **> 30**, set an error (e.g. "Too many API calls") and **do not** call the API; if **≤ 30**, proceed to fetch only for those pairs that need it and use local storage for the rest → `api.ts` performs `GET https://rata.digitraffic.fi/api/v1/trains/{date}/{trainNumber}` when needed → responses are parsed into `TrainRecord` → successful results for **past dates only** are written to local storage → Query cache holds the data → Summary (cards + timelines) and Table views read from the same hook output.
 - **State**: All Digitraffic-derived data is **server state** managed by TanStack Query, with **local storage** as a persistence layer for past dates. UI state (selected date range, active tab) stays in React state (e.g. `useState` in the top-level component or a small context if preferred). There are two tabs: Summary and Table; the Summary tab shows both summary cards and day-by-day timelines in one panel.
 
+- **Routing:** Hash-based routing only. `src/AppRouter.tsx` reads `window.location.hash`: `#/live` → `<LiveView />`, otherwise → `<App />` (History view). Listen to `hashchange` for browser back/forward. No external router library.
+
 ---
 
 ## Data layer (TanStack Query)
@@ -94,6 +96,15 @@ const trainQueryKey = (date: string, trainNumber: number) =>
   - **Output:** `{ data: TrainRecord[], isLoading: boolean, error: Error | null, tooManyApiCalls: boolean, neededApiCalls: number, fetch: () => void, hasFetched: boolean }`. The `hasFetched` flag tracks whether the user has clicked Fetch at least once (used by the UI to distinguish initial state from empty results). The `tooManyApiCalls` flag is derived from the current date range and storage state (reactive, not only set on fetch).
   - **Internally:** A single `useQuery` with `enabled` gated by fetch state. When `fetch()` is called, the hook creates a `fetchState` object (startDate, endDate, trainNumbers, fetchId) that triggers the query. The query function calls `getApiCallsNeeded()` to get the list of (date, trainNumber) pairs, then `Promise.all` fetches them in parallel. Each pair first checks localStorage cache (for non-today dates); on miss, calls `fetchTrain()` and parses via `parseTrainResponseWithStations()` using station codes derived from direction. After fetching, merges with `getCachedData()` to ensure completeness. Results sorted by date descending (newest first). Error is set only if **all** requests fail and no results exist. `staleTime` is 5 minutes; `retry: 1`.
 
+### Live view hook
+
+- **`useLiveTrainData(direction, routeTrainNumbers, enabled, minutesBeforeDeparture?, minutesAfterDeparture?)`** in `src/hooks/useLiveTrainData.ts`:
+  - **Input:** `direction` ("to-tampere" | "to-lempäälä"), `routeTrainNumbers` (train numbers for that direction from route storage), `enabled` (false when route is loading/error or no trains), and optional `minutesBeforeDeparture` / `minutesAfterDeparture` (defaults 120 and 360; passed to the API).
+  - **API:** Calls `fetchLiveStationTrains(stationCode, minutesBeforeDeparture, minutesAfterDeparture)` where stationCode is LPÄ for to-tampere, TPE for to-lempäälä. Endpoint: `GET https://rata.digitraffic.fi/api/v1/live-trains/station/{stationCode}` with query params `minutes_before_departure` and `minutes_after_departure`.
+  - **Processing:** `parseLiveTrains(raw, direction, routeSet)` filters to route trains, finds departure/arrival rows for correct stations, computes delay/status via existing `getTrainStatus()` from `api.ts`, sorts by scheduled departure. `selectVisibleTrains(trains, new Date().toISOString())` returns `{ previous: LiveTrainInfo[], next: LiveTrainInfo[] }` (previous = all departed, next = all upcoming; no limit) using current time.
+  - **Output:** `{ previous, next, isLoading, error, lastUpdated, refetch }`. `refetch()` triggers a new API fetch. `refetchInterval: 60_000`; `enabled` prevents fetch when route is not ready.
+  - **Query key:** `["liveTrains", stationCode, direction, minutesBeforeDeparture, minutesAfterDeparture]`.
+
 ---
 
 ## API integration
@@ -134,6 +145,12 @@ interface TimeTableRow {
 curl 'https://rata.digitraffic.fi/api/v1/trains/2026-01-30/1719' --compressed
 curl 'https://rata.digitraffic.fi/api/v1/trains/2026-01-30/9700' --compressed
 ```
+
+### Live trains at station API
+
+- **Endpoint:** `GET https://rata.digitraffic.fi/api/v1/live-trains/station/{stationCode}` with time-window query parameters (e.g. minutes before/after).
+- **Response:** Array of train objects with `trainNumber`, `departureDate`, `trainType`, `trainCategory`, `runningCurrently`, `cancelled`, `timeTableRows`. Each timeTableRow can include `liveEstimateTime`, `actualTime`, `differenceInMinutes`, `causes`.
+- **Client:** `src/utils/apiLive.ts` — `fetchLiveStationTrains(stationCode, minutesBefore?, minutesAfter?)`, `parseLiveTrains()`, `selectVisibleTrains()`. Types in `src/types/live.ts` (LiveTrainResponse, LiveTrainInfo, TravelDirection, etc.). Status classification reused from `getTrainStatus()` in `api.ts`.
 
 ### Client
 
@@ -246,9 +263,12 @@ src/
 - **`src/utils/trainStorage.ts`**: `getTrainFromStorage(date, trainNumber)` (returns `TrainRecord | null`, only for past dates; re-derives status from delay on read for classification consistency); `setTrainInStorage(date, trainNumber, record)` (no-op when date is today); `getNeededApiCalls(startDate, endDate, trainNumbers)` returns the count of API calls needed; `getApiCallsNeeded(startDate, endDate, trainNumbers)` returns the actual list of pairs; `getCachedData(startDate, endDate, trainNumbers)` returns all cached records. All functions take `trainNumbers: TrainNumbers` (a `[number, number]` tuple). Key format: `train:{date}:{trainNumber}`.
 - **`src/utils/statsCalculator.ts`**: Pure functions for summary stats and data manipulation. `computeSummary(records: TrainRecord[])` returns `TrainSummary` with `{ onTimePercent, slightDelayPercent, delayedPercent, cancelledCount, averageDelay, totalCount, onTimeCount, slightDelayCount, delayedCount }` where percentages use denominator `totalCount` (all records including cancelled), and `averageDelay` is the mean of `delayMinutes` over non-cancelled records only (rounded to 1 decimal). Also exports `filterByTrain(records, trainNumber)` and `sortByDate(records, ascending?)`.
 - **`src/utils/trainUtils.ts`**: `getTrainTitle(train: TrainConfig): string` — formats the display title: `"08:20 (1719) – Lempäälä → Tampere"` for route-selected trains (name contains "("), or `"Morning train 8:20 – Lempäälä → Tampere"` for defaults.
-- **`src/constants/statusLegend.ts`**: `STATUS_LEGEND_ITEMS` array of `{ color, label }` objects for the 4 statuses (green-5/On time, yellow-5/2-5 min, red-5/>5 min, gray-6/Cancelled). Shared by SummaryCard and Timeline.
+- **`src/constants/statusLegend.ts`**: `STATUS_LEGEND_ITEMS` array of `{ color, label }` objects for the 4 statuses (green-5/On time, yellow-5/2-5 min, red-5/>5 min, gray-6/Cancelled). Shared by SummaryCard, Timeline, and Live view.
 - **`src/hooks/useTrainData.ts`**: Takes date range and `trainNumbers: TrainNumbers`; computes `neededApiCalls` reactively; returns `{ data, isLoading, error, tooManyApiCalls, neededApiCalls, fetch, hasFetched }`. See "Hook contract" above for details.
-- **Components**: SummaryCard, Timeline, DataTable, DateRangePicker, TabNavigation, StatusLegend. App.tsx is the main component that owns all state and passes props to children. The Summary tab uses a **single SimpleGrid** (`cols={{ base: 1, md: 2 }}`, `spacing="lg"`) with two Stack columns — each column contains a section title, SummaryCard, and Timeline for one train. This keeps each train's visuals grouped together (title → card → timeline in one column).
+- **`src/hooks/useLiveTrainData.ts`**: Live view data hook; see "Live view hook" above.
+- **`src/utils/dateUtils.ts`**: Includes `getNowFinnishISO(): string` for live view and Finnish timezone formatting.
+- **Components**: SummaryCard, Timeline, DataTable, DateRangePicker, TabNavigation, StatusLegend, **ViewNavigation** (History / Live Status switcher), **LiveView** (live status page), **StationSelector** (direction: Lempäälä→Tampere / Tampere→Lempäälä), **TrainCard** (single train in live view). LiveView shows current date/time (formatFinnishDate, getTodayFinnish, formatFinnishTime), the search interval text, the two minute-based time-window inputs, a "Virkistä" button that calls the hook’s refetch, and renders all trains returned by the API (no limit). Uses the same route fetch + getRouteWeekdayFromStorage/getRouteTrainsByDirection for train numbers.
+- **Components (History)**: App.tsx is the main component for History view; Summary tab uses a **single SimpleGrid** (`cols={{ base: 1, md: 2 }}`, `spacing="lg"`) with two Stack columns — each column contains a section title, SummaryCard, and Timeline for one train. This keeps each train's visuals grouped together (title → card → timeline in one column).
 
 Section title: One line combining departure time and number with direction (e.g. "08:20 (1719) – Lempäälä → Tampere"), rendered as `<Title order={2} size="h4">` above each train's card and timeline. SummaryCard and Timeline use `hideTitle` prop when placed under such a section header to avoid duplicating the title.
 
@@ -268,7 +288,10 @@ Section title: One line combining departure time and number with direction (e.g.
 - **Setup**: `src/test/setup.ts` imports jest-dom matchers and polyfills `window.matchMedia` (required by Mantine). `src/test/test-utils.tsx` exports a custom `render()` that wraps components with MantineProvider — all component tests should import `render` from `@/test/test-utils` instead of directly from `@testing-library/react`.
 - **Utils**:
   - **`api.test.ts`**: Mock `fetch` via `vi.stubGlobal('fetch', vi.fn(...))`; assert correct URL, response parsing, status classification, empty/404/error handling.
-  - **`dateUtils.test.ts`**: Use `vi.useFakeTimers()` + `vi.setSystemTime()` for timezone-dependent tests. Weekdays in range, Finnish date formatting, reference weekday date.
+  - **`dateUtils.test.ts`**: Use `vi.useFakeTimers()` + `vi.setSystemTime()` for timezone-dependent tests. Weekdays in range, Finnish date formatting, reference weekday date, `getNowFinnishISO()`.
+  - **`apiLive.test.ts`**: fetchLiveStationTrains (success, unknown station, HTTP error, non-array response, request URL includes minutes_before_departure and minutes_after_departure); parseLiveTrains (filter by route, direction mapping, status classification, phases, sorting); selectVisibleTrains (all departed as previous, all upcoming as next; no limit; edge cases).
+  - **`useLiveTrainData.test.ts`**: Hook returns shape when enabled/disabled, error handling, station code by direction, minute params passed to API request (MSW for live API).
+  - **Live components**: StationSelector, TrainCard, ViewNavigation, LiveView (smoke with mocked route and hook).
   - **`statsCalculator.test.ts`**: Given a small `TrainRecord[]`, assert correct percentages, counts, and average delay (cancelled excluded from average).
   - **`trainUtils.test.ts`**: Title formatting for route-selected and default trains.
   - **`apiGraphql.integration.test.ts`**: Integration tests against real Digitraffic GraphQL API for route fetch, direction splitting, return filtering.
@@ -292,5 +315,5 @@ Section title: One line combining departure time and number with direction (e.g.
 
 ## Out of scope (technical spec)
 
-- Backend, authentication, persistence, push notifications, real-time APIs (as in functional spec).
+- Backend, authentication, persistence, push notifications. Live view uses the real-time Digitraffic live-trains API; History view remains historical only.
 - Detailed UI/UX copy and pixel-perfect layout are in the functional and visual specs; this document references them for wording and visuals, implemented with Mantine.

@@ -164,12 +164,27 @@ Stored route items (e.g. `RouteTrainInfo`) include at least: **train number**, *
 
 ## User interface
 
-- **Header:** Title "Commute Punctuality", subtitle "Lempäälä - Tampere" (use this exact wording; no emoji, plain hyphen).
-- **Single-page:** header, date range picker, **two selects** (Outbound train, Return train) with options in format hh:mm (train number), a "Fetch Data" button, **tab navigation** (Summary | Table), and a content area that shows one of the two views. Data is fetched only when the user clicks Fetch Data (no automatic fetch on load). **Before the first fetch**, show a prompt text: "Select a date range and click "Fetch Data" to load train data." Footer text: "Data: Digitraffic / Fintraffic - Weekdays only" (plain hyphen, not bullet).
+- **Header:** Title "Commute Punctuality", subtitle "Lempäälä - Tampere" (use this exact wording; no emoji, plain hyphen). From the main (History) view, the user can switch to **Live** view via view navigation.
+- **View navigation:** Two views: **History** (default, URL hash `#/` or `#`) and **Live** (URL hash `#/live`). A shared control (e.g. segmented control) lets the user switch between "History" and "Live Status". History view is the existing punctuality-tracking flow; Live view shows real-time train status (see §Live view).
+- **Single-page (History view):** header, **view navigation**, date range picker, **two selects** (Outbound train, Return train) with options in format hh:mm (train number), a "Fetch Data" button, **tab navigation** (Summary | Table), and a content area that shows one of the two views. Data is fetched only when the user clicks Fetch Data (no automatic fetch on load). **Before the first fetch**, show a prompt text: "Select a date range and click "Fetch Data" to load train data." Footer text: "Data: Digitraffic / Fintraffic - Weekdays only" (plain hyphen, not bullet).
 - **Summary**: Two cards (selected outbound train, selected return train) with statistics and a proportion bar, plus day-by-day colored timelines for both trains. Headings use the selected train's departure time and number, e.g. "08:20 (1719) – Lempäälä → Tampere".
 - **Table**: Sortable list of all records for the two selected trains.
 - **Loading and errors**: A loading indicator while data is fetched; an error message if the API fails; an empty state if no data for the range. Additionally, a loading spinner is shown while the one-time route fetch is in progress ("Loading train routes..."), and if the route fetch fails, an error Alert with a Retry button is shown. The Fetch Data button is disabled until the route fetch completes.
 - **Visual design** (layout, components, colors, responsive behaviour) is defined in [VISUAL-SPEC.md](VISUAL-SPEC.md).
+
+### Live view (real-time status)
+
+- **Purpose:** Show current and upcoming trains at the selected departure station with live delay/estimate data. Live data is fetched and shown every day (including weekends).
+- **Navigation:** User reaches Live view via view switcher (e.g. "Live Status") or direct link `#/live`.
+- **Direction (departure station):** User selects direction via a control with two options: **Lempäälä → Tampere** (departure from Lempäälä) or **Tampere → Lempäälä** (departure from Tampere). This determines which station’s live departures are shown.
+- **Trains shown:** For the selected direction, show **all** trains returned by the API: all departed (previous) and all upcoming (next). No fixed limit. Labels e.g. "Aiempi juna 1", "Aiempi juna 2", "Seuraava juna 1", "Seuraava juna 2", etc. Each train card shows: train number and type, scheduled vs estimated/actual times (departure and arrival), delay (+N min), status (On time / Slight delay / Delayed / Cancelled), and a “running” indicator if the train is currently running.
+- **Current date and time:** The view displays the current date and time in Finnish format (e.g. "Kuluvapäivä ja kellonaika: pe 6.2. 12:34").
+- **Search interval display:** The chosen time window is shown as text (e.g. "Haun aikaväli: 120 min sitten – 360 min eteenpäin").
+- **Refresh button:** A **"Virkistä"** button lets the user trigger a new API fetch and update the view with the latest data. The button may be disabled while a fetch is in progress.
+- **Time-window selection:** The user can set the API time window with two controls: **minutes before departure** and **minutes after departure** (relative to the current moment). These values are sent to the live API as `minutes_before_departure` and `minutes_after_departure`. Defaults (e.g. 120 and 360) give a sensible window of past and upcoming trains. A "Reset to default" button restores the default values. "Previous" vs "upcoming" trains are split using the current time from the API response.
+- **Data source:** `GET https://rata.digitraffic.fi/api/v1/live-trains/station/{stationCode}` with time-window query parameters `minutes_before_departure` and `minutes_after_departure` (values from the user controls). Response includes `liveEstimateTime`, `actualTime`, `differenceInMinutes`, `cancelled`, and `causes` per timeTableRow. Only trains that belong to the Lempäälä–Tampere route (train numbers from the same stored route data as History view) are shown.
+- **Auto-refresh:** Live data is refreshed automatically every 60 seconds.
+- **Route dependency:** Live view uses the same one-time route fetch as History view; train numbers for the selected direction come from stored route data. If the route has not been loaded yet, show the same loading/error states as in History (loading spinner, or "Failed to load train routes" with Retry).
 
 ## Acceptance Criteria
 
@@ -199,9 +214,6 @@ Stored route items (e.g. `RouteTrainInfo`) include at least: **train number**, *
 - Saving/exporting data
 - Push notifications
 - Comparison with other routes
-- Weekend trains
-- Real-time current train status
-
 ---
 
 **Related specs:** API details, project structure, and example API calls are in [TECHNICAL-SPEC.md](TECHNICAL-SPEC.md). Visual layout and components are in [VISUAL-SPEC.md](VISUAL-SPEC.md).

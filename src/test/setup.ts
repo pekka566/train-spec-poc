@@ -7,6 +7,14 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
+// Mantine SegmentedControl uses ResizeObserver (not available in jsdom)
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+window.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
+
 // MantineProvider uses window.matchMedia (not available in jsdom)
 Object.defineProperty(window, "matchMedia", {
   writable: true,

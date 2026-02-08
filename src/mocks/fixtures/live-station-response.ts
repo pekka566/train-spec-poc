@@ -1,0 +1,209 @@
+/** Mock response for live-trains/station API (Lempäälä station, to-tampere direction). */
+
+const BASE_DATE = "2026-01-27";
+
+/**
+ * 4 trains on the Lempäälä → Tampere route:
+ * - Train 1715: departed on time
+ * - Train 1719: departed with 3 min delay
+ * - Train 1721: upcoming, estimated 2 min late
+ * - Train 1723: upcoming, on schedule
+ */
+export const liveStationLPÄResponse = [
+  {
+    trainNumber: 1715,
+    departureDate: BASE_DATE,
+    trainType: "HL",
+    trainCategory: "Commuter",
+    commuterLineID: "",
+    runningCurrently: false,
+    cancelled: false,
+    timeTableRows: [
+      {
+        stationShortCode: "LPÄ",
+        stationUICCode: 300,
+        type: "DEPARTURE",
+        trainStopping: true,
+        commercialStop: true,
+        cancelled: false,
+        scheduledTime: `${BASE_DATE}T05:20:00Z`,
+        actualTime: `${BASE_DATE}T05:20:00Z`,
+        differenceInMinutes: 0,
+      },
+      {
+        stationShortCode: "TPE",
+        stationUICCode: 160,
+        type: "ARRIVAL",
+        trainStopping: true,
+        commercialStop: true,
+        cancelled: false,
+        scheduledTime: `${BASE_DATE}T05:40:00Z`,
+        actualTime: `${BASE_DATE}T05:40:00Z`,
+        differenceInMinutes: 0,
+      },
+    ],
+  },
+  {
+    trainNumber: 1719,
+    departureDate: BASE_DATE,
+    trainType: "HL",
+    trainCategory: "Commuter",
+    commuterLineID: "",
+    runningCurrently: true,
+    cancelled: false,
+    timeTableRows: [
+      {
+        stationShortCode: "LPÄ",
+        stationUICCode: 300,
+        type: "DEPARTURE",
+        trainStopping: true,
+        commercialStop: true,
+        cancelled: false,
+        scheduledTime: `${BASE_DATE}T06:20:00Z`,
+        actualTime: `${BASE_DATE}T06:23:00Z`,
+        differenceInMinutes: 3,
+      },
+      {
+        stationShortCode: "TPE",
+        stationUICCode: 160,
+        type: "ARRIVAL",
+        trainStopping: true,
+        commercialStop: true,
+        cancelled: false,
+        scheduledTime: `${BASE_DATE}T06:40:00Z`,
+        liveEstimateTime: `${BASE_DATE}T06:43:00Z`,
+        differenceInMinutes: 3,
+      },
+    ],
+  },
+  {
+    trainNumber: 1721,
+    departureDate: BASE_DATE,
+    trainType: "HL",
+    trainCategory: "Commuter",
+    commuterLineID: "",
+    runningCurrently: false,
+    cancelled: false,
+    timeTableRows: [
+      {
+        stationShortCode: "LPÄ",
+        stationUICCode: 300,
+        type: "DEPARTURE",
+        trainStopping: true,
+        commercialStop: true,
+        cancelled: false,
+        scheduledTime: `${BASE_DATE}T07:20:00Z`,
+        liveEstimateTime: `${BASE_DATE}T07:22:00Z`,
+        differenceInMinutes: 2,
+      },
+      {
+        stationShortCode: "TPE",
+        stationUICCode: 160,
+        type: "ARRIVAL",
+        trainStopping: true,
+        commercialStop: true,
+        cancelled: false,
+        scheduledTime: `${BASE_DATE}T07:40:00Z`,
+        liveEstimateTime: `${BASE_DATE}T07:42:00Z`,
+        differenceInMinutes: 2,
+      },
+    ],
+  },
+  {
+    trainNumber: 1723,
+    departureDate: BASE_DATE,
+    trainType: "HL",
+    trainCategory: "Commuter",
+    commuterLineID: "",
+    runningCurrently: false,
+    cancelled: false,
+    timeTableRows: [
+      {
+        stationShortCode: "LPÄ",
+        stationUICCode: 300,
+        type: "DEPARTURE",
+        trainStopping: true,
+        commercialStop: true,
+        cancelled: false,
+        scheduledTime: `${BASE_DATE}T08:20:00Z`,
+        differenceInMinutes: 0,
+      },
+      {
+        stationShortCode: "TPE",
+        stationUICCode: 160,
+        type: "ARRIVAL",
+        trainStopping: true,
+        commercialStop: true,
+        cancelled: false,
+        scheduledTime: `${BASE_DATE}T08:40:00Z`,
+        differenceInMinutes: 0,
+      },
+    ],
+  },
+];
+
+/** Mock response for Tampere station (to-lempäälä direction). */
+export const liveStationTPEResponse = [
+  {
+    trainNumber: 9700,
+    departureDate: BASE_DATE,
+    trainType: "HL",
+    trainCategory: "Commuter",
+    commuterLineID: "",
+    runningCurrently: false,
+    cancelled: false,
+    timeTableRows: [
+      {
+        stationShortCode: "TPE",
+        stationUICCode: 160,
+        type: "DEPARTURE",
+        trainStopping: true,
+        commercialStop: true,
+        cancelled: false,
+        scheduledTime: `${BASE_DATE}T14:35:00Z`,
+        differenceInMinutes: 0,
+      },
+      {
+        stationShortCode: "LPÄ",
+        stationUICCode: 300,
+        type: "ARRIVAL",
+        trainStopping: true,
+        commercialStop: true,
+        cancelled: false,
+        scheduledTime: `${BASE_DATE}T14:55:00Z`,
+        differenceInMinutes: 0,
+      },
+    ],
+  },
+  {
+    trainNumber: 9702,
+    departureDate: BASE_DATE,
+    trainType: "HL",
+    trainCategory: "Commuter",
+    commuterLineID: "",
+    runningCurrently: false,
+    cancelled: false,
+    timeTableRows: [
+      {
+        stationShortCode: "TPE",
+        stationUICCode: 160,
+        type: "DEPARTURE",
+        trainStopping: true,
+        commercialStop: true,
+        cancelled: false,
+        scheduledTime: `${BASE_DATE}T15:35:00Z`,
+        differenceInMinutes: 0,
+      },
+      {
+        stationShortCode: "LPÄ",
+        stationUICCode: 300,
+        type: "ARRIVAL",
+        trainStopping: true,
+        commercialStop: true,
+        cancelled: false,
+        scheduledTime: `${BASE_DATE}T15:55:00Z`,
+        differenceInMinutes: 0,
+      },
+    ],
+  },
+];

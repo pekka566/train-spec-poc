@@ -7,14 +7,15 @@ dayjs.extend(timezone);
 
 const FINNISH_TIMEZONE = "Europe/Helsinki";
 
-const FINNISH_WEEKDAYS: Record<number, string> = {
-  1: "ma",
-  2: "ti",
-  3: "ke",
-  4: "to",
-  5: "pe",
-  6: "la",
-  0: "su",
+/** Weekday abbreviations (dayjs .day(): 0 = Sun, 1 = Mon, …, 6 = Sat) */
+const WEEKDAY_ABBREV: Record<number, string> = {
+  0: "Su",
+  1: "Mo",
+  2: "Tu",
+  3: "We",
+  4: "Th",
+  5: "Fr",
+  6: "Sa",
 };
 
 /**
@@ -48,12 +49,12 @@ export function isToday(date: string): boolean {
 }
 
 /**
- * Format ISO date (YYYY-MM-DD) to Finnish weekday abbreviation + day.month
- * e.g. "2026-01-27" -> "ma 27.1."
+ * Format ISO date (YYYY-MM-DD) to weekday abbreviation + day.month (English abbrevs, Finnish timezone)
+ * e.g. "2026-01-27" -> "Tu 27.1."
  */
 export function formatFinnishDate(date: string): string {
   const d = dayjs(date).tz(FINNISH_TIMEZONE);
-  const weekday = FINNISH_WEEKDAYS[d.day()];
+  const weekday = WEEKDAY_ABBREV[d.day()];
   return `${weekday} ${d.date()}.${d.month() + 1}.`;
 }
 
@@ -107,4 +108,11 @@ export function getDefaultDateRange(): { startDate: string; endDate: string } {
  */
 export function isEndDateInFuture(endDate: string): boolean {
   return endDate > getTodayFinnish();
+}
+
+/**
+ * Get the current time in Finnish timezone as ISO 8601 string.
+ */
+export function getNowFinnishISO(): string {
+  return dayjs().tz(FINNISH_TIMEZONE).toISOString();
 }

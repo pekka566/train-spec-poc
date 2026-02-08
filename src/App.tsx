@@ -14,6 +14,7 @@ import {
 } from "@mantine/core";
 import { IconAlertCircle, IconInbox } from "@tabler/icons-react";
 import { getAppVersion } from "@/utils/versionCheck";
+import { ViewNavigation } from "@/components/ViewNavigation";
 import { DateRangePicker } from "@/components/DateRangePicker";
 import { TabNavigation, TABS_ID, type TabValue } from "@/components/TabNavigation";
 import { SummaryCard } from "@/components/SummaryCard";
@@ -379,6 +380,10 @@ function App() {
           <Title order={1}>Commute Punctuality</Title>
           <Text c="dimmed">Lempäälä - Tampere</Text>
         </Box>
+
+        <Center>
+          <ViewNavigation currentView="history" />
+        </Center>
 
         {/* Main: date picker, tabs, content */}
         <Box

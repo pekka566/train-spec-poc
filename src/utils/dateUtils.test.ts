@@ -8,16 +8,17 @@ import {
   getReferenceWeekdayDate,
   getDefaultDateRange,
   isEndDateInFuture,
+  getNowFinnishISO,
 } from "./dateUtils";
 
 describe("dateUtils", () => {
   describe("formatFinnishDate", () => {
-    it("formats Monday correctly", () => {
-      expect(formatFinnishDate("2026-01-27")).toBe("ti 27.1.");
+    it("formats Tuesday correctly", () => {
+      expect(formatFinnishDate("2026-01-27")).toBe("Tu 27.1.");
     });
 
-    it("formats Friday correctly", () => {
-      expect(formatFinnishDate("2026-01-31")).toBe("la 31.1.");
+    it("formats Saturday correctly", () => {
+      expect(formatFinnishDate("2026-01-31")).toBe("Sa 31.1.");
     });
   });
 
@@ -173,4 +174,22 @@ describe("dateUtils", () => {
       expect(isEndDateInFuture("2026-02-02")).toBe(false);
     });
   });
+
+  describe("getNowFinnishISO", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("returns ISO string in Finnish timezone", () => {
+      vi.setSystemTime(new Date("2026-02-03T10:00:00Z"));
+      const result = getNowFinnishISO();
+      expect(result).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+      expect(new Date(result).toISOString()).toBe("2026-02-03T10:00:00.000Z");
+    });
+  });
+
 });

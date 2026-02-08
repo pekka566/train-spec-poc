@@ -8,7 +8,7 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
-import App from "./App";
+import { AppRouter } from "./AppRouter";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { initMocks } from "./mocks/init";
 import { checkVersionAndClearStorage } from "./utils/versionCheck";
@@ -59,7 +59,7 @@ initMocks().then(() => {
           cssVariablesResolver={cssVariablesResolver}
         >
           <ErrorBoundary>
-            <App />
+            <AppRouter />
           </ErrorBoundary>
         </MantineProvider>
       </QueryClientProvider>

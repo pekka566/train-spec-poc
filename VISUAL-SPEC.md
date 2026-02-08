@@ -27,6 +27,9 @@ This document defines the **visual design** of the application: layout, componen
 │                 Commute Punctuality                             │
 │                  Lempäälä - Tampere                              │
 │                                                                 │
+│              ┌────────────────┬────────────────┐               │
+│              │    History      │  Live Status   │               │
+│              └────────────────┴────────────────┘               │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
 │   ┌─────────────┐ ┌─────────────┐ ┌──────────────────┐ ┌──────────────────┐ ┌─────────────────┐
@@ -320,6 +323,28 @@ Shown when fetch completes but returns zero records. Centered with inbox icon, d
 ### No route data (train selects)
 
 When route data is not available (e.g. first visit or route fetch has not run), the train selection dropdowns are **disabled** and show the placeholder text **"No route data"**. The app uses default train numbers (1719 outbound, 9700 return) for Fetch and all views until route data exists; then the selects are populated from `train:route:weekday` and the user can choose trains. When route data exists, default selection is 1719 (outbound) and 9700 (return) when those trains appear in the options, otherwise the first option in each list.
+
+---
+
+## View navigation
+
+- **Control:** Mantine `SegmentedControl` with two options: **"History"** (value `history`, hash `#/` or `#`) and **"Live Status"** (value `live`, hash `#/live`). Placed below the header (Commute Punctuality / Lempäälä - Tampere) in both views. Use `aria-label="Switch between history and live views"`.
+- **History view:** The default punctuality-tracking flow (date range, train selects, Fetch Data, Summary/Table tabs) as described in the rest of this document.
+- **Live view:** Separate page at `#/live`; see "Live view (real-time status)" below.
+
+---
+
+## Live view (real-time status)
+
+- **Header:** Title "Live Status", subtitle "Lempäälä – Tampere". Same view navigation (History / Live Status) below the header; Live Status is the active segment when on `#/live`.
+- **Departure station (direction):** Label "Departure station". Mantine `SegmentedControl` with **"Lempäälä → Tampere"** (value `to-tampere`) and **"Tampere → Lempäälä"** (value `to-lempäälä`). Accessible (`aria-labelledby` or equivalent).
+- **Current date and time:** Text line e.g. "Kuluvapäivä ja kellonaika: pe 6.2. 12:34" (Finnish date and time).
+- **Time-window controls:** Two Mantine `NumberInput` fields: **"Minutes before departure"** (description: "Time window start (relative to now)") and **"Minutes after departure"** (description: "Time window end (relative to now)"). Values are passed to the live API. Defaults e.g. 120 and 360; min 0, max 1440. A **"Reset to default"** button restores defaults. A **"Virkistä"** button triggers a new fetch and refreshes the data (disabled while loading). Accessible labels (e.g. `aria-label="Minutes before departure"`).
+- **Search interval:** Text line e.g. "Haun aikaväli: 120 min sitten – 360 min eteenpäin" showing the selected time window.
+- **Train cards:** For the selected direction, show **all** trains returned by the API (all departed, then all upcoming). No fixed count. Labels: "Aiempi juna 1", "Aiempi juna 2", … for departed; "Seuraava juna 1", "Seuraava juna 2", … for upcoming. Card style: departed trains use Mantine Card with coloured left border (status colour from STATUS_LEGEND_ITEMS), slightly muted. Upcoming: first emphasised (e.g. primary variant), rest secondary. Show train number + type, scheduled vs actual/estimated times (departure | arrival), delay (+N min), status badge, and "running" indicator if `runningCurrently`. Two-column time layout: departure times | arrival times. Reuse `formatFinnishTime()` from dateUtils.
+- **Status legend:** Same as Summary view (On time, Slight delay, Delayed, Cancelled) below the train cards when data is shown. Optional "Last updated: HH:mm (refreshes every 60s)" text.
+- **States:** Route loading ("Loading train routes..."), route error (same Alert + Retry as History), live data loading ("Loading live data..."), live error ("Error loading live data"), empty ("No trains found for this direction right now.").
+- **Footer:** Same as History: "Data: Digitraffic / Fintraffic – Weekdays only | v{version}".
 
 ---
 
