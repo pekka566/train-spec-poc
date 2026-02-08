@@ -29,6 +29,7 @@ export const liveStationLPÄResponse = [
         scheduledTime: `${BASE_DATE}T05:20:00Z`,
         actualTime: `${BASE_DATE}T05:20:00Z`,
         differenceInMinutes: 0,
+        commercialTrack: "1",
       },
       {
         stationShortCode: "TPE",
@@ -62,6 +63,7 @@ export const liveStationLPÄResponse = [
         scheduledTime: `${BASE_DATE}T06:20:00Z`,
         actualTime: `${BASE_DATE}T06:23:00Z`,
         differenceInMinutes: 3,
+        commercialTrack: "2",
       },
       {
         stationShortCode: "TPE",

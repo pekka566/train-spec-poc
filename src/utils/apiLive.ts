@@ -72,6 +72,10 @@ export function parseLiveTrains(
     const arrDelay = cancelled ? 0 : (arrRow.differenceInMinutes ?? 0);
     const status = getTrainStatus(cancelled, depDelay);
     const phase = depRow.actualTime ? "departed" : "upcoming";
+    const track =
+      depRow.commercialTrack?.trim() !== ""
+        ? depRow.commercialTrack
+        : undefined;
 
     result.push({
       trainNumber: train.trainNumber,
@@ -94,6 +98,7 @@ export function parseLiveTrains(
       },
       status,
       phase,
+      commercialTrack: track,
     });
   }
 

@@ -123,6 +123,38 @@ describe("apiLive", () => {
       expect(result[0]!.arrival.stationCode).toBe("TPE");
     });
 
+    it("includes commercialTrack from departure row when non-empty", () => {
+      const trains = [
+        makeTrain(1719, {}, { commercialTrack: "1" }, {}),
+      ];
+      const result = parseLiveTrains(
+        trains,
+        "to-tampere",
+        new Set([1719]),
+      );
+      expect(result[0]!.commercialTrack).toBe("1");
+    });
+
+    it("omits commercialTrack when departure row has empty or missing value", () => {
+      const trainsEmpty = [
+        makeTrain(1719, {}, { commercialTrack: "" }, {}),
+      ];
+      const resultEmpty = parseLiveTrains(
+        trainsEmpty,
+        "to-tampere",
+        new Set([1719]),
+      );
+      expect(resultEmpty[0]!.commercialTrack).toBeUndefined();
+
+      const trainsNoField = [makeTrain(1719)];
+      const resultNoField = parseLiveTrains(
+        trainsNoField,
+        "to-tampere",
+        new Set([1719]),
+      );
+      expect(resultNoField[0]!.commercialTrack).toBeUndefined();
+    });
+
     it("correctly maps to-lempäälä direction (TPE→LPÄ)", () => {
       const train: LiveTrainResponse = {
         trainNumber: 9700,

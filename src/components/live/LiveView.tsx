@@ -87,7 +87,7 @@ export function LiveView() {
     doRouteFetch();
   }, [doRouteFetch]);
 
-  const { previous, next, isLoading, error, lastUpdated, refetch } =
+  const { previous, next, isLoading, error, lastUpdated, isFetched, refetch } =
     useLiveTrainData(
     direction,
     routeTrainNumbers,
@@ -160,10 +160,15 @@ export function LiveView() {
               onChange={setDirection}
             />
 
-            <Text size="sm" c="dimmed">
-              Current date and time: {formatFinnishDate(getTodayFinnish())}{" "}
-              {formatFinnishTime(now.toISOString())}
-            </Text>
+            <Group gap="md" wrap="wrap" align="center">
+              <Text size="sm">
+                Current date and time: <Text component="span" fw={700} >{formatFinnishDate(getTodayFinnish())}{" "}
+                {formatFinnishTime(now.toISOString())}</Text>
+              </Text>
+              <Text size="sm">
+                Search window:  <Text component="span" fw={700}>{searchWindowText}</Text>
+              </Text>
+            </Group>
 
             <Group align="flex-end" gap="sm" wrap="wrap">
               <NumberInput
@@ -211,10 +216,6 @@ export function LiveView() {
                 Search
               </Button>
             </Group>
-
-            <Text size="sm" c="dimmed">
-              Search window: {searchWindowText}
-            </Text>
 
                 {routeError && (
                   <Alert
@@ -275,11 +276,11 @@ export function LiveView() {
 
                 {hasData && (
                   <Stack gap="md">
-                    {previous.map((train, i) => (
+                    {previous.map((train) => (
                       <TrainCard
                         key={`${train.departure.scheduledTime}-${train.trainNumber}`}
                         train={train}
-                        label={`Previous train ${i + 1}`}
+                        label=""
                         variant="past"
                       />
                     ))}
@@ -287,7 +288,7 @@ export function LiveView() {
                       <TrainCard
                         key={`${train.departure.scheduledTime}-${train.trainNumber}`}
                         train={train}
-                        label={`Next train ${i + 1}`}
+                        label=""
                         variant={i === 0 ? "primary" : "secondary"}
                       />
                     ))}
@@ -307,7 +308,8 @@ export function LiveView() {
                   </Stack>
                 )}
 
-                {!isLoading &&
+                {isFetched &&
+                  !isLoading &&
                   !error &&
                   !isRouteLoading &&
                   !routeError &&

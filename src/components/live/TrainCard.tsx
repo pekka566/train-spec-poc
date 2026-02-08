@@ -76,7 +76,7 @@ export function TrainCard({ train, label, variant }: TrainCardProps) {
         borderLeftColor: STATUS_BORDER_COLORS[train.status],
         opacity: isPast ? 0.75 : 1,
       }}
-      aria-label={`${label}: Train ${train.trainNumber}`}
+      aria-label={label ? `${label}: Train ${train.trainNumber}` : `Train ${train.trainNumber}`}
     >
       <Stack gap="sm">
         {/* Header row: label + train info + status badge */}
@@ -84,11 +84,18 @@ export function TrainCard({ train, label, variant }: TrainCardProps) {
           <Group gap="xs">
             <IconTrain size={18} aria-hidden />
             <div>
-              <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-                {label}
-              </Text>
+              {label ? (
+                <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
+                  {label}
+                </Text>
+              ) : null}
               <Text fw={600}>
                 {train.trainType} {train.trainNumber}
+                {train.commercialTrack ? (
+                  <Text component="span" size="sm" c="dimmed" fw={400} ml="xs">
+                    Track {train.commercialTrack}
+                  </Text>
+                ) : null}
               </Text>
             </div>
           </Group>

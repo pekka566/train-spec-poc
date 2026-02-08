@@ -13,6 +13,7 @@ export interface LiveTimeTableRow {
   actualTime?: string;
   differenceInMinutes?: number;
   causes?: LiveDelayCause[];
+  commercialTrack?: string;
 }
 
 export interface LiveDelayCause {
@@ -61,6 +62,8 @@ export interface LiveTrainInfo {
   };
   status: TrainStatus;
   phase: TrainPhase;
+  /** Track at departure station (from API commercialTrack). */
+  commercialTrack?: string;
 }
 
 /** Result of selecting visible trains for display: all departed (previous), all upcoming (next). */

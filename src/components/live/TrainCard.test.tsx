@@ -41,6 +41,28 @@ describe("TrainCard", () => {
     expect(screen.getByText("HL 1719")).toBeInTheDocument();
   });
 
+  it("renders track when commercialTrack is set", () => {
+    render(
+      <TrainCard
+        train={makeTrainInfo({ commercialTrack: "1" })}
+        label="Next train"
+        variant="primary"
+      />,
+    );
+    expect(screen.getByText("Track 1")).toBeInTheDocument();
+  });
+
+  it("does not render track when commercialTrack is absent", () => {
+    render(
+      <TrainCard
+        train={makeTrainInfo()}
+        label="Next train"
+        variant="primary"
+      />,
+    );
+    expect(screen.queryByText(/Track \d/)).not.toBeInTheDocument();
+  });
+
   it("renders the label", () => {
     render(
       <TrainCard

@@ -16,6 +16,7 @@ export interface UseLiveTrainDataResult {
   isLoading: boolean;
   error: Error | null;
   lastUpdated: Date | null;
+  isFetched: boolean;
   refetch: () => void;
 }
 
@@ -34,7 +35,8 @@ export function useLiveTrainData(
     [routeTrainNumbers],
   );
 
-  const { data, isLoading, error, dataUpdatedAt, refetch } = useQuery({
+  const { data, isLoading, error, dataUpdatedAt, isFetched, refetch } =
+    useQuery({
     queryKey: [
       "liveTrains",
       stationCode,
@@ -63,6 +65,7 @@ export function useLiveTrainData(
     isLoading,
     error: error as Error | null,
     lastUpdated: dataUpdatedAt ? new Date(dataUpdatedAt) : null,
+    isFetched,
     refetch,
   };
 }

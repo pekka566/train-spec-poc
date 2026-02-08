@@ -70,6 +70,7 @@ describe("LiveView", () => {
       isLoading: false,
       error: null,
       lastUpdated: null,
+      isFetched: false,
       refetch: vi.fn(),
     });
   });
@@ -100,7 +101,7 @@ describe("LiveView", () => {
     expect(screen.getByText("Tampere → Lempäälä")).toBeInTheDocument();
   });
 
-  it("shows empty state or train cards when route is loaded", async () => {
+  it("shows train cards when data exists, or no empty message until search is run", async () => {
     render(<LiveView />);
 
     await waitFor(() => {
@@ -109,7 +110,7 @@ describe("LiveView", () => {
 
     const noTrains = screen.queryByText(/No trains found for this direction/);
     const onTime = screen.queryByText("On time");
-    expect(noTrains !== null || onTime !== null).toBe(true);
+    expect(noTrains === null || onTime !== null).toBe(true);
   });
 
   it("renders minute controls and passes them to useLiveTrainData", async () => {
