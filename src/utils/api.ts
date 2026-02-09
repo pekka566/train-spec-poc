@@ -1,4 +1,9 @@
-import type { TrainResponse, TrainRecord, TrainStatus, TimeTableRow } from "@/types/train";
+import type {
+  TrainResponse,
+  TrainRecord,
+  TrainStatus,
+  TimeTableRow,
+} from "@/types/train";
 import { TRAINS } from "@/types/train";
 import type { RouteDirection } from "@/utils/apiGraphql";
 import { STATION_CODES } from "@/constants/stations";
@@ -55,9 +60,10 @@ function getStationCodes(trainNumber: number): { from: string; to: string } {
 /**
  * Get station codes by route direction (for parsing any train on the route).
  */
-export function getStationCodesByDirection(
-  direction: RouteDirection
-): { from: string; to: string } {
+export function getStationCodesByDirection(direction: RouteDirection): {
+  from: string;
+  to: string;
+} {
   if (direction === "Lempäälä → Tampere") {
     return { from: STATION_CODES.LEMPÄÄLÄ, to: STATION_CODES.TAMPERE };
   }

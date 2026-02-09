@@ -14,7 +14,7 @@ describe("ViewNavigation", () => {
     expect(
       screen.getByRole("radiogroup", {
         name: /switch between history and live views/i,
-      }),
+      })
     ).toBeInTheDocument();
   });
 

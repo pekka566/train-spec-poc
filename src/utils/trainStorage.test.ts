@@ -40,7 +40,10 @@ describe("trainStorage", () => {
 
   describe("getTrainFromStorage", () => {
     it("returns null for today's date", () => {
-      localStorage.setItem("train:2026-02-03:1719", JSON.stringify(createRecord({ date: "2026-02-03" })));
+      localStorage.setItem(
+        "train:2026-02-03:1719",
+        JSON.stringify(createRecord({ date: "2026-02-03" }))
+      );
       expect(getTrainFromStorage("2026-02-03", 1719)).toBeNull();
     });
 
@@ -58,7 +61,11 @@ describe("trainStorage", () => {
     });
 
     it("re-derives status via getTrainStatus", () => {
-      const record = createRecord({ date: "2026-01-27", delayMinutes: 3, status: "ON_TIME" });
+      const record = createRecord({
+        date: "2026-01-27",
+        delayMinutes: 3,
+        status: "ON_TIME",
+      });
       localStorage.setItem("train:2026-01-27:1719", JSON.stringify(record));
       const result = getTrainFromStorage("2026-01-27", 1719);
       // 3 min delay should be SLIGHT_DELAY, not ON_TIME
@@ -99,7 +106,11 @@ describe("trainStorage", () => {
 
     it("skips past cached days", () => {
       setTrainInStorage("2026-02-02", 1719, createRecord({ date: "2026-02-02" }));
-      setTrainInStorage("2026-02-02", 9700, createRecord({ date: "2026-02-02", trainNumber: 9700 }));
+      setTrainInStorage(
+        "2026-02-02",
+        9700,
+        createRecord({ date: "2026-02-02", trainNumber: 9700 })
+      );
       const count = getNeededApiCalls("2026-02-02", "2026-02-03", [1719, 9700]);
       // Mon 02-02: 0 (cached), Tue 02-03 (today): 2
       expect(count).toBe(2);
@@ -112,9 +123,15 @@ describe("trainStorage", () => {
       const pairs = getApiCallsNeeded("2026-02-02", "2026-02-03", [1719, 9700]);
       // Mon 02-02: 9700 uncached; Tue 02-03 (today): 1719 + 9700
       expect(pairs).toHaveLength(3);
-      expect(pairs.some((p) => p.date === "2026-02-02" && p.trainNumber === 9700)).toBe(true);
-      expect(pairs.some((p) => p.date === "2026-02-03" && p.trainNumber === 1719)).toBe(true);
-      expect(pairs.some((p) => p.date === "2026-02-03" && p.trainNumber === 9700)).toBe(true);
+      expect(pairs.some((p) => p.date === "2026-02-02" && p.trainNumber === 9700)).toBe(
+        true
+      );
+      expect(pairs.some((p) => p.date === "2026-02-03" && p.trainNumber === 1719)).toBe(
+        true
+      );
+      expect(pairs.some((p) => p.date === "2026-02-03" && p.trainNumber === 9700)).toBe(
+        true
+      );
     });
   });
 
@@ -129,16 +146,28 @@ describe("trainStorage", () => {
 
   describe("cleanupOldStorage", () => {
     it("removes entries older than 90 days", () => {
-      localStorage.setItem("train:2025-10-01:1719", JSON.stringify(createRecord({ date: "2025-10-01" })));
-      localStorage.setItem("train:2026-02-02:1719", JSON.stringify(createRecord({ date: "2026-02-02" })));
+      localStorage.setItem(
+        "train:2025-10-01:1719",
+        JSON.stringify(createRecord({ date: "2025-10-01" }))
+      );
+      localStorage.setItem(
+        "train:2026-02-02:1719",
+        JSON.stringify(createRecord({ date: "2026-02-02" }))
+      );
       cleanupOldStorage();
       expect(localStorage.getItem("train:2025-10-01:1719")).toBeNull();
       expect(localStorage.getItem("train:2026-02-02:1719")).not.toBeNull();
     });
 
     it("preserves train:route:* keys", () => {
-      localStorage.setItem("train:route:weekday", JSON.stringify({ date: "2026-02-03", trains: [] }));
-      localStorage.setItem("train:2025-10-01:1719", JSON.stringify(createRecord({ date: "2025-10-01" })));
+      localStorage.setItem(
+        "train:route:weekday",
+        JSON.stringify({ date: "2026-02-03", trains: [] })
+      );
+      localStorage.setItem(
+        "train:2025-10-01:1719",
+        JSON.stringify(createRecord({ date: "2025-10-01" }))
+      );
       cleanupOldStorage();
       expect(localStorage.getItem("train:route:weekday")).not.toBeNull();
     });

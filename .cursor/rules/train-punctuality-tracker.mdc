@@ -1,0 +1,80 @@
+---
+description: Project context and conventions for Train Punctuality Tracker (stack, commands, structure, conventions, domain, specs)
+alwaysApply: true
+---
+
+# Train Punctuality Tracker
+
+React SPA tracking commuter train punctuality between Lempäälä and Tampere, Finland using the Digitraffic API.
+
+## Quick Reference
+
+- **Stack**: Vite + React 19 + TypeScript + Mantine UI 7 + TanStack Query 5
+- **Package manager**: pnpm (v9.15.0)
+- **Node**: >=20.0.0
+- **Key libraries**: dayjs (timezone handling), @tabler/icons-react (icons), @mantine/dates (date inputs)
+- **Path alias**: `@/*` maps to `src/*`
+
+## Commands
+
+```bash
+pnpm dev          # Start dev server
+pnpm build        # Type check + build (tsc -b && vite build)
+pnpm test         # Run tests (vitest)
+pnpm test:ui      # Run tests with UI
+pnpm test:coverage # Run tests with coverage
+pnpm lint         # ESLint
+pnpm type-check   # TypeScript check (tsc --noEmit)
+```
+
+## Project Structure
+
+```
+src/
+├── components/     # DateRangePicker, SummaryCard, Timeline, DataTable, TabNavigation, StatusLegend, live/ (LiveView, TrainCard, StationSelector)
+├── hooks/         # useTrainData, useLiveTrainData
+├── utils/         # api.ts, apiGraphql.ts, apiLive.ts, dateUtils.ts, statsCalculator.ts, trainStorage.ts, trainUtils.ts
+├── types/         # train.ts, live.ts
+├── constants/     # stations, statusLegend
+├── test/          # setup.ts, test-utils.tsx (render with MantineProvider)
+├── App.tsx        # History view; AppRouter switches History vs Live
+└── main.tsx       # StrictMode → QueryClientProvider → MantineProvider → AppRouter
+```
+
+## Code Conventions
+
+- **Components**: Explicit props interfaces (not `React.FC`). Inline Mantine styles only; no custom CSS files. CSS variables: `var(--mantine-color-{name}-{shade})`.
+- **Accessibility**: Semantic HTML; skip-to-content link; `role="status"` + `aria-live="polite"` for loading/empty; `aria-sort` on sortable headers; `aria-hidden` on decorative icons; `aria-label` where needed. Use `eslint-plugin-jsx-a11y`.
+- **State**: `useState` for UI; TanStack Query for server state; `useMemo` for derived data; `useCallback` for fetch handlers.
+- **Dates**: Internal `YYYY-MM-DD`; display Finnish (`ma 27.1.`, 24h); dayjs with `Europe/Helsinki`. Weekdays only where applicable.
+- **Testing**: Vitest + jsdom + React Testing Library. Import `render` from `@/test/test-utils` (MantineProvider). API: stub `fetch`; time: `vi.useFakeTimers()` + `vi.setSystemTime()`.
+
+## Domain
+
+- **Trains**: Default outbound 1719 (LPÄ→TPE 8:20), return 9700 (TPE→LPÄ 16:35). Return options filtered to depart after selected outbound.
+- **Status**: `ON_TIME` ≤1 min, `SLIGHT_DELAY` 2–5 min, `DELAYED` >5 min, `CANCELLED`.
+- **REST API**: `GET https://rata.digitraffic.fi/api/v1/trains/{date}/{trainNumber}`, date YYYY-MM-DD, times UTC → show Europe/Helsinki. Max 30 API calls per fetch.
+- **GraphQL**: Route fetch once per day (`apiGraphql.ts`), weekday trains; storage `train:route:weekday`, flag `train:route:fetched`.
+- **LocalStorage**: Train data `train:{date}:{trainNumber}` (not today); route `train:route:weekday`.
+- **Live view**: `apiLive.ts` + `useLiveTrainData`; station + time window; data only when user clicks Search.
+
+## Specifications
+
+- FUNCTIONAL-SPEC.md, TECHNICAL-SPEC.md, VISUAL-SPEC.md — keep in sync with implementation.
+
+## After every change
+
+**Minimum (every change):** Lint + tests + build.
+
+1. **Lint**: `pnpm lint` — fix all reported errors.
+2. **Tests**: `pnpm test -- --run` — all must pass.
+3. **Build**: `pnpm build` — must succeed.
+
+**When adding or changing logic/UI, or before considering done:** Add coverage and spec check.
+
+4. **Coverage** (when touching logic or tests): `pnpm test:coverage` — if new uncovered lines/branches, ask user whether to add tests.
+5. **Spec sync** (when behavior or architecture changes): If FUNCTIONAL/TECHNICAL/VISUAL specs no longer match implementation, ask user whether to update specs or code.
+
+**Optional / before release:** Run E2E: `pnpm test:e2e` (includes `e2e/accessibility.spec.ts`).
+
+Do not consider a change complete until lint passes, tests pass, and build succeeds. For non-trivial changes, also run coverage and verify specs.

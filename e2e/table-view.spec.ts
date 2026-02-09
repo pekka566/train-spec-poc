@@ -1,13 +1,6 @@
 import { test, expect } from "@playwright/test";
-import {
-  mockGraphQLRoute,
-  clearLocalStorage,
-} from "./helpers";
-import {
-  train1719Response,
-  train9700Response,
-  withDate,
-} from "../src/mocks/fixtures";
+import { mockGraphQLRoute, clearLocalStorage } from "./helpers";
+import { train1719Response, train9700Response, withDate } from "../src/mocks/fixtures";
 
 test.describe("Table view", () => {
   test.beforeEach(async ({ page }) => {
@@ -56,10 +49,16 @@ test.describe("Table view", () => {
     await page.getByRole("tab", { name: "Table" }).click();
 
     // Verify column headers
-    await expect(page.getByRole("columnheader", { name: "Scheduled" }).first()).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Actual" }).first()).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Scheduled" }).first()
+    ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Actual" }).first()
+    ).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Delay" }).first()).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Status" }).first()).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Status" }).first()
+    ).toBeVisible();
   });
 
   test("sort toggle works on Date column", async ({ page }) => {
@@ -101,7 +100,9 @@ test.describe("Table view", () => {
     await page.getByRole("tab", { name: "Table" }).click();
 
     // Default sort is descending
-    const sortButton = page.getByRole("button", { name: /sort by date, descending/i }).first();
+    const sortButton = page
+      .getByRole("button", { name: /sort by date, descending/i })
+      .first();
     await expect(sortButton).toBeVisible();
 
     // Click to toggle to ascending

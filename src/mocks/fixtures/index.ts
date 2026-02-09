@@ -1,13 +1,6 @@
 export { graphqlRouteResponse } from "./graphql-route-response";
-export {
-  train1719Response,
-  train9700Response,
-  trainResponses,
-} from "./train-responses";
-export {
-  liveStationLPÄResponse,
-  liveStationTPEResponse,
-} from "./live-station-response";
+export { train1719Response, train9700Response, trainResponses } from "./train-responses";
+export { liveStationLPÄResponse, liveStationTPEResponse } from "./live-station-response";
 
 /** The base date used in all fixtures. */
 const FIXTURE_DATE = "2026-01-27";

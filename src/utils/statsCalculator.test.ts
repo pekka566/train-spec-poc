@@ -2,9 +2,7 @@ import { describe, it, expect } from "vitest";
 import { computeSummary, filterByTrain, sortByDate } from "./statsCalculator";
 import type { TrainRecord } from "@/types/train";
 
-const createRecord = (
-  overrides: Partial<TrainRecord> = {}
-): TrainRecord => ({
+const createRecord = (overrides: Partial<TrainRecord> = {}): TrainRecord => ({
   date: "2026-01-27",
   trainNumber: 1719,
   trainType: "HL",
@@ -48,7 +46,12 @@ describe("statsCalculator", () => {
     it("excludes cancelled trains from average delay", () => {
       const records: TrainRecord[] = [
         createRecord({ status: "ON_TIME", delayMinutes: 0 }),
-        createRecord({ status: "CANCELLED", cancelled: true, delayMinutes: 0, date: "2026-01-28" }),
+        createRecord({
+          status: "CANCELLED",
+          cancelled: true,
+          delayMinutes: 0,
+          date: "2026-01-28",
+        }),
         createRecord({ status: "SLIGHT_DELAY", delayMinutes: 4, date: "2026-01-29" }),
       ];
 

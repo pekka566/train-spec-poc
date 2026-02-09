@@ -72,8 +72,12 @@ test.describe("Data fetch and display", () => {
     await page.getByRole("tab", { name: "Table" }).click();
 
     // Table should be visible with column headers
-    await expect(page.getByRole("columnheader", { name: "Scheduled" }).first()).toBeVisible();
-    await expect(page.getByRole("columnheader", { name: "Status" }).first()).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Scheduled" }).first()
+    ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Status" }).first()
+    ).toBeVisible();
   });
 
   test("shows loading spinner during data fetch", async ({ page }) => {

@@ -101,12 +101,14 @@ export function DateRangePicker({
         />
         <Select
           label="Outbound train"
-          placeholder={isRouteLoading ? "Loading..." : noRouteData ? "No route data" : undefined}
+          placeholder={
+            isRouteLoading ? "Loading..." : noRouteData ? "No route data" : undefined
+          }
           data={outboundData}
           value={selectedOutbound ? String(selectedOutbound.trainNumber) : null}
           onChange={(value) => {
             const train = value
-              ? outboundOptions.find((t) => String(t.trainNumber) === value) ?? null
+              ? (outboundOptions.find((t) => String(t.trainNumber) === value) ?? null)
               : null;
             onOutboundChange(train ?? null);
           }}
@@ -117,12 +119,14 @@ export function DateRangePicker({
         />
         <Select
           label="Return train"
-          placeholder={isRouteLoading ? "Loading..." : noRouteData ? "No route data" : undefined}
+          placeholder={
+            isRouteLoading ? "Loading..." : noRouteData ? "No route data" : undefined
+          }
           data={returnData}
           value={selectedReturn ? String(selectedReturn.trainNumber) : null}
           onChange={(value) => {
             const train = value
-              ? returnOptions.find((t) => String(t.trainNumber) === value) ?? null
+              ? (returnOptions.find((t) => String(t.trainNumber) === value) ?? null)
               : null;
             onReturnChange(train ?? null);
           }}

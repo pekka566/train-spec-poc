@@ -70,9 +70,7 @@ export function DataTable({ train, records }: DataTableProps) {
             </Table.Caption>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th
-                  aria-sort={sortAscending ? "ascending" : "descending"}
-                >
+                <Table.Th aria-sort={sortAscending ? "ascending" : "descending"}>
                   <UnstyledButton
                     onClick={toggleSort}
                     aria-label={
@@ -104,9 +102,7 @@ export function DataTable({ train, records }: DataTableProps) {
                   <Table.Td>
                     {record.trainType} {record.trainNumber}
                   </Table.Td>
-                  <Table.Td>
-                    {formatFinnishTime(record.scheduledDeparture)}
-                  </Table.Td>
+                  <Table.Td>{formatFinnishTime(record.scheduledDeparture)}</Table.Td>
                   <Table.Td>
                     {record.cancelled
                       ? "-"
@@ -119,9 +115,7 @@ export function DataTable({ train, records }: DataTableProps) {
                       "-"
                     ) : (
                       <Text span fw={500}>
-                        {record.delayMinutes > 0
-                          ? `+${record.delayMinutes}min`
-                          : "0min"}
+                        {record.delayMinutes > 0 ? `+${record.delayMinutes}min` : "0min"}
                       </Text>
                     )}
                   </Table.Td>

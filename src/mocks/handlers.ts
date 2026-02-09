@@ -9,7 +9,8 @@ import {
 
 const GRAPHQL_URL = "https://rata.digitraffic.fi/api/v2/graphql/graphql";
 const REST_URL = "https://rata.digitraffic.fi/api/v1/trains/:date/:trainNumber";
-const LIVE_STATION_URL = "https://rata.digitraffic.fi/api/v1/live-trains/station/:stationCode";
+const LIVE_STATION_URL =
+  "https://rata.digitraffic.fi/api/v1/live-trains/station/:stationCode";
 
 /** Default handlers that return successful mock responses. */
 export const handlers = [
@@ -46,10 +47,7 @@ export const handlers = [
 export const errorHandlers = {
   /** GraphQL route fetch returns 500. */
   graphql500: http.post(GRAPHQL_URL, () => {
-    return HttpResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return HttpResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }),
 
   /** GraphQL route fetch returns a response with errors array. */
@@ -61,17 +59,11 @@ export const errorHandlers = {
 
   /** REST train fetch returns 500 for all trains. */
   restError: http.get(REST_URL, () => {
-    return HttpResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return HttpResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }),
 
   /** Live station API returns 500. */
   liveStation500: http.get(LIVE_STATION_URL, () => {
-    return HttpResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return HttpResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }),
 };

@@ -25,24 +25,20 @@ export function useLiveTrainData(
   routeTrainNumbers: number[],
   _enabled: boolean,
   minutesBeforeDeparture: number = 120,
-  minutesAfterDeparture: number = 360,
+  minutesAfterDeparture: number = 360
 ): UseLiveTrainDataResult {
   const stationCode =
     direction === "to-tampere" ? STATION_CODES.LEMPÄÄLÄ : STATION_CODES.TAMPERE;
 
-  const routeSet = useMemo(
-    () => new Set(routeTrainNumbers),
-    [routeTrainNumbers],
-  );
+  const routeSet = useMemo(() => new Set(routeTrainNumbers), [routeTrainNumbers]);
 
-  const { data, isLoading, error, dataUpdatedAt, isFetched, refetch } =
-    useQuery({
+  const { data, isLoading, error, dataUpdatedAt, isFetched, refetch } = useQuery({
     queryKey: ["liveTrains", stationCode, direction],
     queryFn: async () => {
       const raw = await fetchLiveStationTrains(
         stationCode,
         minutesBeforeDeparture,
-        minutesAfterDeparture,
+        minutesAfterDeparture
       );
       const parsed = parseLiveTrains(raw, direction, routeSet);
       const nowIso = new Date().toISOString();

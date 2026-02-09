@@ -78,12 +78,16 @@ describe("DateRangePicker", () => {
   });
 
   it("disables Fetch button when tooManyApiCalls is true", () => {
-    render(<DateRangePicker {...defaultProps} tooManyApiCalls={true} neededApiCalls={31} />);
+    render(
+      <DateRangePicker {...defaultProps} tooManyApiCalls={true} neededApiCalls={31} />
+    );
     expect(screen.getByRole("button", { name: /fetch data/i })).toBeDisabled();
   });
 
   it("shows too many API calls warning", () => {
-    render(<DateRangePicker {...defaultProps} tooManyApiCalls={true} neededApiCalls={35} />);
+    render(
+      <DateRangePicker {...defaultProps} tooManyApiCalls={true} neededApiCalls={35} />
+    );
     expect(screen.getByRole("alert")).toHaveTextContent(
       "Would require 35 API calls. Maximum is 30."
     );

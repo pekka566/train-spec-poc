@@ -191,5 +191,4 @@ describe("dateUtils", () => {
       expect(new Date(result).toISOString()).toBe("2026-02-03T10:00:00.000Z");
     });
   });
-
 });

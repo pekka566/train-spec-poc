@@ -3,9 +3,7 @@ import { render, screen } from "@/test/test-utils";
 import { TrainCard } from "./TrainCard";
 import type { LiveTrainInfo } from "@/types/live";
 
-const makeTrainInfo = (
-  overrides: Partial<LiveTrainInfo> = {},
-): LiveTrainInfo => ({
+const makeTrainInfo = (overrides: Partial<LiveTrainInfo> = {}): LiveTrainInfo => ({
   trainNumber: 1719,
   trainType: "HL",
   cancelled: false,
@@ -31,13 +29,7 @@ const makeTrainInfo = (
 
 describe("TrainCard", () => {
   it("renders train number and type", () => {
-    render(
-      <TrainCard
-        train={makeTrainInfo()}
-        label="Next train"
-        variant="primary"
-      />,
-    );
+    render(<TrainCard train={makeTrainInfo()} label="Next train" variant="primary" />);
     expect(screen.getByText("HL 1719")).toBeInTheDocument();
   });
 
@@ -47,41 +39,23 @@ describe("TrainCard", () => {
         train={makeTrainInfo({ commercialTrack: "1" })}
         label="Next train"
         variant="primary"
-      />,
+      />
     );
     expect(screen.getByText("Track 1")).toBeInTheDocument();
   });
 
   it("does not render track when commercialTrack is absent", () => {
-    render(
-      <TrainCard
-        train={makeTrainInfo()}
-        label="Next train"
-        variant="primary"
-      />,
-    );
+    render(<TrainCard train={makeTrainInfo()} label="Next train" variant="primary" />);
     expect(screen.queryByText(/Track \d/)).not.toBeInTheDocument();
   });
 
   it("renders the label", () => {
-    render(
-      <TrainCard
-        train={makeTrainInfo()}
-        label="Next train"
-        variant="primary"
-      />,
-    );
+    render(<TrainCard train={makeTrainInfo()} label="Next train" variant="primary" />);
     expect(screen.getByText("Next train")).toBeInTheDocument();
   });
 
   it("renders on-time status badge", () => {
-    render(
-      <TrainCard
-        train={makeTrainInfo()}
-        label="Next train"
-        variant="primary"
-      />,
-    );
+    render(<TrainCard train={makeTrainInfo()} label="Next train" variant="primary" />);
     expect(screen.getByText("On time")).toBeInTheDocument();
   });
 
@@ -107,7 +81,7 @@ describe("TrainCard", () => {
         })}
         label="Next train"
         variant="primary"
-      />,
+      />
     );
     expect(screen.getByText("Delayed")).toBeInTheDocument();
   });
@@ -121,7 +95,7 @@ describe("TrainCard", () => {
         })}
         label="Next train"
         variant="primary"
-      />,
+      />
     );
     // Badge + TimeBlock both say "Cancelled"
     const badges = screen.getAllByText("Cancelled");
@@ -150,19 +124,13 @@ describe("TrainCard", () => {
         })}
         label="Next train"
         variant="primary"
-      />,
+      />
     );
     expect(screen.getByText("+3 min")).toBeInTheDocument();
   });
 
   it("renders station codes in time blocks", () => {
-    render(
-      <TrainCard
-        train={makeTrainInfo()}
-        label="Next train"
-        variant="primary"
-      />,
-    );
+    render(<TrainCard train={makeTrainInfo()} label="Next train" variant="primary" />);
     expect(screen.getByText(/Departure \(LPÄ\)/)).toBeInTheDocument();
     expect(screen.getByText(/Arrival \(TPE\)/)).toBeInTheDocument();
   });
@@ -173,34 +141,18 @@ describe("TrainCard", () => {
         train={makeTrainInfo({ runningCurrently: true })}
         label="Next train"
         variant="primary"
-      />,
+      />
     );
-    expect(
-      screen.getByLabelText("Train is currently running"),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Train is currently running")).toBeInTheDocument();
   });
 
   it("has aria-label on the card", () => {
-    render(
-      <TrainCard
-        train={makeTrainInfo()}
-        label="Next train"
-        variant="primary"
-      />,
-    );
-    expect(
-      screen.getByLabelText("Next train: Train 1719"),
-    ).toBeInTheDocument();
+    render(<TrainCard train={makeTrainInfo()} label="Next train" variant="primary" />);
+    expect(screen.getByLabelText("Next train: Train 1719")).toBeInTheDocument();
   });
 
   it("applies reduced opacity for past variant", () => {
-    render(
-      <TrainCard
-        train={makeTrainInfo()}
-        label="Previous train"
-        variant="past"
-      />,
-    );
+    render(<TrainCard train={makeTrainInfo()} label="Previous train" variant="past" />);
     const card = screen.getByLabelText("Previous train: Train 1719");
     expect(card.style.opacity).toBe("0.75");
   });

@@ -1,10 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import {
-  MantineProvider,
-  createTheme,
-  type CSSVariablesResolver,
-} from "@mantine/core";
+import { MantineProvider, createTheme, type CSSVariablesResolver } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
@@ -36,8 +32,16 @@ const theme = createTheme({
   autoContrast: true,
   colors: {
     green: [
-      "#ebfbee", "#d3f9d8", "#b2f2bb", "#8ce99a", "#69db7c",
-      "#51cf66", "#40c057", "#37b24d", "#2f9e44", "#278436",
+      "#ebfbee",
+      "#d3f9d8",
+      "#b2f2bb",
+      "#8ce99a",
+      "#69db7c",
+      "#51cf66",
+      "#40c057",
+      "#37b24d",
+      "#2f9e44",
+      "#278436",
     ],
   },
 });
@@ -54,10 +58,7 @@ initMocks().then(() => {
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <MantineProvider
-          theme={theme}
-          cssVariablesResolver={cssVariablesResolver}
-        >
+        <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver}>
           <ErrorBoundary>
             <AppRouter />
           </ErrorBoundary>

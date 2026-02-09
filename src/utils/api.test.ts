@@ -1,11 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "@/mocks/server";
-import {
-  fetchTrain,
-  parseTrainResponse,
-  getStationCodesByDirection,
-} from "./api";
+import { fetchTrain, parseTrainResponse, getStationCodesByDirection } from "./api";
 import type { TrainResponse } from "@/types/train";
 
 const REST_URL = "https://rata.digitraffic.fi/api/v1/trains/:date/:trainNumber";

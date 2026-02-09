@@ -18,16 +18,10 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
       onChange={(value) => onTabChange(value as TabValue)}
     >
       <Tabs.List>
-        <Tabs.Tab
-          value="summary"
-          leftSection={<IconChartBar size={16} aria-hidden />}
-        >
+        <Tabs.Tab value="summary" leftSection={<IconChartBar size={16} aria-hidden />}>
           Summary
         </Tabs.Tab>
-        <Tabs.Tab
-          value="table"
-          leftSection={<IconTable size={16} aria-hidden />}
-        >
+        <Tabs.Tab value="table" leftSection={<IconTable size={16} aria-hidden />}>
           Table
         </Tabs.Tab>
       </Tabs.List>

@@ -12,9 +12,7 @@ describe("getTrainTitle", () => {
       scheduledTime: "08:20",
       direction: "Lempäälä → Tampere",
     };
-    expect(getTrainTitle(train)).toBe(
-      "08:20 (1719) – Lempäälä → Tampere"
-    );
+    expect(getTrainTitle(train)).toBe("08:20 (1719) – Lempäälä → Tampere");
   });
 
   it("formats train without parentheses as name – direction", () => {
@@ -26,8 +24,6 @@ describe("getTrainTitle", () => {
       scheduledTime: "08:20",
       direction: "Lempäälä → Tampere",
     };
-    expect(getTrainTitle(train)).toBe(
-      "Morning train 8:20 – Lempäälä → Tampere"
-    );
+    expect(getTrainTitle(train)).toBe("Morning train 8:20 – Lempäälä → Tampere");
   });
 });

@@ -1,9 +1,5 @@
 import { Page } from "@playwright/test";
-import {
-  graphqlRouteResponse,
-  trainResponses,
-  withDate,
-} from "../src/mocks/fixtures";
+import { graphqlRouteResponse, trainResponses, withDate } from "../src/mocks/fixtures";
 
 const GRAPHQL_URL = "**/api/v2/graphql/graphql";
 const REST_URL = "**/api/v1/trains/**";

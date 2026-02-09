@@ -23,27 +23,19 @@ function createRecord(overrides: Partial<TrainRecord> = {}): TrainRecord {
 
 describe("Timeline", () => {
   it("renders train title and direction", () => {
-    render(
-      <Timeline train={TRAINS.morning} records={[]} />
-    );
-    expect(
-      screen.getByText(/Morning train [–-] Lempäälä → Tampere/)
-    ).toBeInTheDocument();
+    render(<Timeline train={TRAINS.morning} records={[]} />);
+    expect(screen.getByText(/Morning train [–-] Lempäälä → Tampere/)).toBeInTheDocument();
   });
 
   it("shows empty state message when no records", () => {
-    render(
-      <Timeline train={TRAINS.morning} records={[]} />
-    );
+    render(<Timeline train={TRAINS.morning} records={[]} />);
     expect(
       screen.getByText(/No data available for this train in the selected date range/)
     ).toBeInTheDocument();
   });
 
   it("renders legend labels when empty", () => {
-    render(
-      <Timeline train={TRAINS.morning} records={[]} />
-    );
+    render(<Timeline train={TRAINS.morning} records={[]} />);
     expect(screen.getByText("On time")).toBeInTheDocument();
     expect(screen.getByText("2-5 min")).toBeInTheDocument();
     expect(screen.getByText(">5 min")).toBeInTheDocument();
@@ -56,9 +48,7 @@ describe("Timeline", () => {
       createRecord({ date: "2026-01-28", status: "SLIGHT_DELAY", delayMinutes: 3 }),
       createRecord({ date: "2026-01-29", status: "CANCELLED", cancelled: true }),
     ];
-    render(
-      <Timeline train={TRAINS.morning} records={records} />
-    );
+    render(<Timeline train={TRAINS.morning} records={records} />);
     expect(screen.getByText("0")).toBeInTheDocument();
     expect(screen.getByText("+3")).toBeInTheDocument();
     expect(screen.getByText("X")).toBeInTheDocument();
@@ -68,9 +58,7 @@ describe("Timeline", () => {
     const records: TrainRecord[] = [
       createRecord({ date: "2026-01-27", status: "ON_TIME" }),
     ];
-    const { container } = render(
-      <Timeline train={TRAINS.morning} records={records} />
-    );
+    const { container } = render(<Timeline train={TRAINS.morning} records={records} />);
     const cell = container.querySelector('[style*="mantine-color-green-5"]');
     expect(cell).toBeTruthy();
     expect((cell as HTMLElement).style.backgroundColor).toBe(
@@ -79,12 +67,8 @@ describe("Timeline", () => {
   });
 
   it("renders cells with date day in each cell", () => {
-    const records: TrainRecord[] = [
-      createRecord({ date: "2026-01-27" }),
-    ];
-    render(
-      <Timeline train={TRAINS.morning} records={records} />
-    );
+    const records: TrainRecord[] = [createRecord({ date: "2026-01-27" })];
+    render(<Timeline train={TRAINS.morning} records={records} />);
     expect(screen.getByText("27")).toBeInTheDocument();
   });
 
@@ -92,9 +76,7 @@ describe("Timeline", () => {
     const records: TrainRecord[] = [
       createRecord({ date: "2026-01-27", status: "ON_TIME", delayMinutes: 1 }),
     ];
-    const { container } = render(
-      <Timeline train={TRAINS.morning} records={records} />
-    );
+    const { container } = render(<Timeline train={TRAINS.morning} records={records} />);
     expect(screen.getByText("+1")).toBeInTheDocument();
     expect(screen.getByText("On time")).toBeInTheDocument();
     const cell = container.querySelector('[style*="mantine-color-green-5"]');
@@ -102,18 +84,12 @@ describe("Timeline", () => {
   });
 
   it("renders evening train title when given evening config", () => {
-    render(
-      <Timeline train={TRAINS.evening} records={[]} />
-    );
-    expect(
-      screen.getByText(/Evening train [–-] Tampere → Lempäälä/)
-    ).toBeInTheDocument();
+    render(<Timeline train={TRAINS.evening} records={[]} />);
+    expect(screen.getByText(/Evening train [–-] Tampere → Lempäälä/)).toBeInTheDocument();
   });
 
   it("does not render train title when hideTitle is true", () => {
-    render(
-      <Timeline train={TRAINS.morning} records={[]} hideTitle />
-    );
+    render(<Timeline train={TRAINS.morning} records={[]} hideTitle />);
     expect(
       screen.queryByText(/Morning train [–-] Lempäälä → Tampere/)
     ).not.toBeInTheDocument();

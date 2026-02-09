@@ -2,11 +2,7 @@ import { describe, it, expect } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "@/mocks/server";
 import type { LiveTrainResponse, LiveTrainInfo } from "@/types/live";
-import {
-  fetchLiveStationTrains,
-  parseLiveTrains,
-  selectVisibleTrains,
-} from "./apiLive";
+import { fetchLiveStationTrains, parseLiveTrains, selectVisibleTrains } from "./apiLive";
 
 const LIVE_STATION_URL =
   "https://rata.digitraffic.fi/api/v1/live-trains/station/:stationCode";
@@ -32,10 +28,10 @@ describe("apiLive", () => {
             status: 500,
             statusText: "Internal Server Error",
           });
-        }),
+        })
       );
       await expect(fetchLiveStationTrains("LPÄ")).rejects.toThrow(
-        "Live API error: 500 Internal Server Error",
+        "Live API error: 500 Internal Server Error"
       );
     });
 
@@ -43,7 +39,7 @@ describe("apiLive", () => {
       server.use(
         http.get(LIVE_STATION_URL, () => {
           return HttpResponse.json({ error: "not found" });
-        }),
+        })
       );
       const result = await fetchLiveStationTrains("LPÄ");
       expect(result).toEqual([]);
@@ -56,7 +52,7 @@ describe("apiLive", () => {
           expect(url.searchParams.get("minutes_before_departure")).toBe("60");
           expect(url.searchParams.get("minutes_after_departure")).toBe("120");
           return HttpResponse.json([]);
-        }),
+        })
       );
       const result = await fetchLiveStationTrains("LPÄ", 60, 120);
       expect(result).toEqual([]);
@@ -68,7 +64,7 @@ describe("apiLive", () => {
       trainNumber: number,
       overrides: Partial<LiveTrainResponse> = {},
       depOverrides: Record<string, unknown> = {},
-      arrOverrides: Record<string, unknown> = {},
+      arrOverrides: Record<string, unknown> = {}
     ): LiveTrainResponse => ({
       trainNumber,
       departureDate: "2026-01-27",
@@ -103,55 +99,31 @@ describe("apiLive", () => {
 
     it("filters to only route train numbers", () => {
       const trains = [makeTrain(1719), makeTrain(999)];
-      const result = parseLiveTrains(
-        trains,
-        "to-tampere",
-        new Set([1719]),
-      );
+      const result = parseLiveTrains(trains, "to-tampere", new Set([1719]));
       expect(result).toHaveLength(1);
       expect(result[0]!.trainNumber).toBe(1719);
     });
 
     it("correctly maps to-tampere direction (LPÄ→TPE)", () => {
       const trains = [makeTrain(1719)];
-      const result = parseLiveTrains(
-        trains,
-        "to-tampere",
-        new Set([1719]),
-      );
+      const result = parseLiveTrains(trains, "to-tampere", new Set([1719]));
       expect(result[0]!.departure.stationCode).toBe("LPÄ");
       expect(result[0]!.arrival.stationCode).toBe("TPE");
     });
 
     it("includes commercialTrack from departure row when non-empty", () => {
-      const trains = [
-        makeTrain(1719, {}, { commercialTrack: "1" }, {}),
-      ];
-      const result = parseLiveTrains(
-        trains,
-        "to-tampere",
-        new Set([1719]),
-      );
+      const trains = [makeTrain(1719, {}, { commercialTrack: "1" }, {})];
+      const result = parseLiveTrains(trains, "to-tampere", new Set([1719]));
       expect(result[0]!.commercialTrack).toBe("1");
     });
 
     it("omits commercialTrack when departure row has empty or missing value", () => {
-      const trainsEmpty = [
-        makeTrain(1719, {}, { commercialTrack: "" }, {}),
-      ];
-      const resultEmpty = parseLiveTrains(
-        trainsEmpty,
-        "to-tampere",
-        new Set([1719]),
-      );
+      const trainsEmpty = [makeTrain(1719, {}, { commercialTrack: "" }, {})];
+      const resultEmpty = parseLiveTrains(trainsEmpty, "to-tampere", new Set([1719]));
       expect(resultEmpty[0]!.commercialTrack).toBeUndefined();
 
       const trainsNoField = [makeTrain(1719)];
-      const resultNoField = parseLiveTrains(
-        trainsNoField,
-        "to-tampere",
-        new Set([1719]),
-      );
+      const resultNoField = parseLiveTrains(trainsNoField, "to-tampere", new Set([1719]));
       expect(resultNoField[0]!.commercialTrack).toBeUndefined();
     });
 
@@ -184,86 +156,48 @@ describe("apiLive", () => {
           },
         ],
       };
-      const result = parseLiveTrains(
-        [train],
-        "to-lempäälä",
-        new Set([9700]),
-      );
+      const result = parseLiveTrains([train], "to-lempäälä", new Set([9700]));
       expect(result[0]!.departure.stationCode).toBe("TPE");
       expect(result[0]!.arrival.stationCode).toBe("LPÄ");
     });
 
     it("classifies on-time train", () => {
       const trains = [makeTrain(1719)];
-      const result = parseLiveTrains(
-        trains,
-        "to-tampere",
-        new Set([1719]),
-      );
+      const result = parseLiveTrains(trains, "to-tampere", new Set([1719]));
       expect(result[0]!.status).toBe("ON_TIME");
       expect(result[0]!.departure.delayMinutes).toBe(0);
     });
 
     it("classifies slight delay (2-5 min)", () => {
-      const trains = [
-        makeTrain(1719, {}, { differenceInMinutes: 3 }),
-      ];
-      const result = parseLiveTrains(
-        trains,
-        "to-tampere",
-        new Set([1719]),
-      );
+      const trains = [makeTrain(1719, {}, { differenceInMinutes: 3 })];
+      const result = parseLiveTrains(trains, "to-tampere", new Set([1719]));
       expect(result[0]!.status).toBe("SLIGHT_DELAY");
       expect(result[0]!.departure.delayMinutes).toBe(3);
     });
 
     it("classifies delayed (>5 min)", () => {
-      const trains = [
-        makeTrain(1719, {}, { differenceInMinutes: 8 }),
-      ];
-      const result = parseLiveTrains(
-        trains,
-        "to-tampere",
-        new Set([1719]),
-      );
+      const trains = [makeTrain(1719, {}, { differenceInMinutes: 8 })];
+      const result = parseLiveTrains(trains, "to-tampere", new Set([1719]));
       expect(result[0]!.status).toBe("DELAYED");
     });
 
     it("classifies cancelled train", () => {
       const trains = [makeTrain(1719, { cancelled: true })];
-      const result = parseLiveTrains(
-        trains,
-        "to-tampere",
-        new Set([1719]),
-      );
+      const result = parseLiveTrains(trains, "to-tampere", new Set([1719]));
       expect(result[0]!.status).toBe("CANCELLED");
       expect(result[0]!.cancelled).toBe(true);
       expect(result[0]!.departure.delayMinutes).toBe(0);
     });
 
     it("determines departed phase when actualTime present", () => {
-      const trains = [
-        makeTrain(
-          1719,
-          {},
-          { actualTime: "2026-01-27T06:22:00Z" },
-        ),
-      ];
-      const result = parseLiveTrains(
-        trains,
-        "to-tampere",
-        new Set([1719]),
-      );
+      const trains = [makeTrain(1719, {}, { actualTime: "2026-01-27T06:22:00Z" })];
+      const result = parseLiveTrains(trains, "to-tampere", new Set([1719]));
       expect(result[0]!.phase).toBe("departed");
     });
 
     it("determines upcoming phase when no actualTime", () => {
       const trains = [makeTrain(1719)];
-      const result = parseLiveTrains(
-        trains,
-        "to-tampere",
-        new Set([1719]),
-      );
+      const result = parseLiveTrains(trains, "to-tampere", new Set([1719]));
       expect(result[0]!.phase).toBe("upcoming");
     });
 
@@ -273,20 +207,12 @@ describe("apiLive", () => {
           1719,
           {},
           { liveEstimateTime: "2026-01-27T06:22:00Z" },
-          { liveEstimateTime: "2026-01-27T06:42:00Z" },
+          { liveEstimateTime: "2026-01-27T06:42:00Z" }
         ),
       ];
-      const result = parseLiveTrains(
-        trains,
-        "to-tampere",
-        new Set([1719]),
-      );
-      expect(result[0]!.departure.estimatedTime).toBe(
-        "2026-01-27T06:22:00Z",
-      );
-      expect(result[0]!.arrival.estimatedTime).toBe(
-        "2026-01-27T06:42:00Z",
-      );
+      const result = parseLiveTrains(trains, "to-tampere", new Set([1719]));
+      expect(result[0]!.departure.estimatedTime).toBe("2026-01-27T06:22:00Z");
+      expect(result[0]!.arrival.estimatedTime).toBe("2026-01-27T06:42:00Z");
     });
 
     it("skips trains missing departure or arrival row", () => {
@@ -310,21 +236,27 @@ describe("apiLive", () => {
           // Missing TPE ARRIVAL
         ],
       };
-      const result = parseLiveTrains(
-        [train],
-        "to-tampere",
-        new Set([1719]),
-      );
+      const result = parseLiveTrains([train], "to-tampere", new Set([1719]));
       expect(result).toHaveLength(0);
     });
 
     it("sorts by scheduled departure time", () => {
-      const train1 = makeTrain(1721, {}, { scheduledTime: "2026-01-27T07:20:00Z" }, { scheduledTime: "2026-01-27T07:40:00Z" });
-      const train2 = makeTrain(1719, {}, { scheduledTime: "2026-01-27T06:20:00Z" }, { scheduledTime: "2026-01-27T06:40:00Z" });
+      const train1 = makeTrain(
+        1721,
+        {},
+        { scheduledTime: "2026-01-27T07:20:00Z" },
+        { scheduledTime: "2026-01-27T07:40:00Z" }
+      );
+      const train2 = makeTrain(
+        1719,
+        {},
+        { scheduledTime: "2026-01-27T06:20:00Z" },
+        { scheduledTime: "2026-01-27T06:40:00Z" }
+      );
       const result = parseLiveTrains(
         [train1, train2],
         "to-tampere",
-        new Set([1719, 1721]),
+        new Set([1719, 1721])
       );
       expect(result[0]!.trainNumber).toBe(1719);
       expect(result[1]!.trainNumber).toBe(1721);
@@ -332,20 +264,13 @@ describe("apiLive", () => {
 
     it("returns empty array when no matching trains", () => {
       const trains = [makeTrain(1719)];
-      const result = parseLiveTrains(
-        trains,
-        "to-tampere",
-        new Set([9999]),
-      );
+      const result = parseLiveTrains(trains, "to-tampere", new Set([9999]));
       expect(result).toEqual([]);
     });
   });
 
   describe("selectVisibleTrains", () => {
-    const makeInfo = (
-      trainNumber: number,
-      scheduledDep: string,
-    ): LiveTrainInfo => ({
+    const makeInfo = (trainNumber: number, scheduledDep: string): LiveTrainInfo => ({
       trainNumber,
       trainType: "HL",
       cancelled: false,

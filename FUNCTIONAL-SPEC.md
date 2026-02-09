@@ -9,6 +9,7 @@ A React-based web application that tracks the punctuality of commuter trains bet
 As a daily commuter traveling between Lempäälä and Tampere, I want to track the punctuality of my regular trains over time so that I can understand how reliable my commute is and identify patterns in delays.
 
 **Target trains:**
+
 - **Morning train**: Lempäälä → Tampere, scheduled departure 8:20
 - **Evening train**: Tampere → Lempäälä, scheduled departure 16:35
 
@@ -48,12 +49,12 @@ The first tab shows both summary statistics and day-by-day timelines in one scro
 
 **Timelines:** Below the cards, a visual day-by-day representation where each day is shown as a colored cell:
 
-| Color | Status |
-|-------|--------|
-| Green | On time (≤1 min delay) |
+| Color  | Status                 |
+| ------ | ---------------------- |
+| Green  | On time (≤1 min delay) |
 | Yellow | Slight delay (2–5 min) |
-| Red | Delayed (>5 min) |
-| Gray | Cancelled |
+| Red    | Delayed (>5 min)       |
+| Gray   | Cancelled              |
 
 Cells should show the delay amount on hover or inside the cell. Display timelines for both the selected outbound train and the selected return train.
 
@@ -61,14 +62,14 @@ Cells should show the delay amount on hover or inside the cell. Display timeline
 
 A table showing all data points with columns:
 
-| Column | Description |
-|--------|-------------|
-| Date | Finnish weekday abbreviation + day.month (e.g. "ma 27.1."). Abbreviations: ma (Mon), ti (Tue), ke (Wed), to (Thu), pe (Fri). |
-| Train | Train type and number (e.g., "HL 1719", "HL 9700") |
-| Scheduled | Scheduled departure time (Finnish local time, 24h) |
-| Actual | Actual departure time in Finnish local time, or "-" if cancelled |
-| Delay | Delay in minutes: "+N" if late, "0" or "0 min" if on time, "-" if cancelled |
-| Status | Badge: On time / Slight delay / Delayed / Cancelled (use status colors per visual spec) |
+| Column    | Description                                                                                                                  |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Date      | Finnish weekday abbreviation + day.month (e.g. "ma 27.1."). Abbreviations: ma (Mon), ti (Tue), ke (Wed), to (Thu), pe (Fri). |
+| Train     | Train type and number (e.g., "HL 1719", "HL 9700")                                                                           |
+| Scheduled | Scheduled departure time (Finnish local time, 24h)                                                                           |
+| Actual    | Actual departure time in Finnish local time, or "-" if cancelled                                                             |
+| Delay     | Delay in minutes: "+N" if late, "0" or "0 min" if on time, "-" if cancelled                                                  |
+| Status    | Badge: On time / Slight delay / Delayed / Cancelled (use status colors per visual spec)                                      |
 
 - **Sortable:** At least the Date column must be sortable; others optional. **Default sort:** newest first (date descending).
 - **Layout:** Either one combined table with a Train column, or two separate table sections (selected outbound train, selected return train) as in the visual spec wireframes.
@@ -96,11 +97,11 @@ A table showing all data points with columns:
 
 ```typescript
 interface TrainRecord {
-  date: string;                 // "YYYY-MM-DD"
+  date: string; // "YYYY-MM-DD"
   trainNumber: number;
   trainType: string;
   cancelled: boolean;
-  scheduledDeparture: string;   // ISO timestamp
+  scheduledDeparture: string; // ISO timestamp
   actualDeparture: string | null;
   scheduledArrival: string;
   actualArrival: string | null;
@@ -128,7 +129,7 @@ const TRAINS = {
     from: "LPÄ",
     to: "TPE",
     scheduledTime: "8:20",
-    direction: "Lempäälä → Tampere"
+    direction: "Lempäälä → Tampere",
   },
   evening: {
     number: 9700,
@@ -136,8 +137,8 @@ const TRAINS = {
     from: "TPE",
     to: "LPÄ",
     scheduledTime: "16:35",
-    direction: "Tampere → Lempäälä"
-  }
+    direction: "Tampere → Lempäälä",
+  },
 };
 ```
 
@@ -149,10 +150,10 @@ The app supports **either** fixed train numbers (1719, 9700) **or** user-selecte
 interface TrainConfig {
   number: number;
   name: string;
-  from: string;        // Station short code (e.g. "LPÄ")
-  to: string;          // Station short code (e.g. "TPE")
+  from: string; // Station short code (e.g. "LPÄ")
+  to: string; // Station short code (e.g. "TPE")
   scheduledTime: string;
-  direction: string;   // e.g. "Lempäälä → Tampere"
+  direction: string; // e.g. "Lempäälä → Tampere"
 }
 ```
 
@@ -214,6 +215,7 @@ Stored route items (e.g. `RouteTrainInfo`) include at least: **train number**, *
 - Saving/exporting data
 - Push notifications
 - Comparison with other routes
+
 ---
 
 **Related specs:** API details, project structure, and example API calls are in [TECHNICAL-SPEC.md](TECHNICAL-SPEC.md). Visual layout and components are in [VISUAL-SPEC.md](VISUAL-SPEC.md).

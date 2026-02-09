@@ -1,9 +1,5 @@
 import { test, expect } from "@playwright/test";
-import {
-  mockGraphQLRoute,
-  mockGraphQLError,
-  clearLocalStorage,
-} from "./helpers";
+import { mockGraphQLRoute, mockGraphQLError, clearLocalStorage } from "./helpers";
 import { graphqlRouteResponse } from "../src/mocks/fixtures";
 
 test.describe("App load and route fetch", () => {
@@ -15,9 +11,13 @@ test.describe("App load and route fetch", () => {
 
   test("shows title and initial state", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Commute Punctuality" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Commute Punctuality" })
+    ).toBeVisible();
     await expect(page.getByText("Lempäälä - Tampere")).toBeVisible();
-    await expect(page.getByText("Data: Digitraffic / Fintraffic - Weekdays only")).toBeVisible();
+    await expect(
+      page.getByText("Data: Digitraffic / Fintraffic - Weekdays only")
+    ).toBeVisible();
   });
 
   test("shows loading spinner during route fetch", async ({ page }) => {

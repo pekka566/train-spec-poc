@@ -54,11 +54,7 @@ function getTooltipContent(record: TrainRecord): string {
   return `${dateStr}: +${record.delayMinutes} min delay`;
 }
 
-export function Timeline({
-  train,
-  records,
-  hideTitle = false,
-}: TimelineProps) {
+export function Timeline({ train, records, hideTitle = false }: TimelineProps) {
   // Sort oldest to newest for timeline display
   const sortedRecords = sortByDate(records, true);
 
@@ -76,18 +72,9 @@ export function Timeline({
             No data available for this train in the selected date range.
           </Text>
         ) : (
-          <Group
-            gap="xs"
-            wrap="wrap"
-            role="group"
-            aria-label="Punctuality by date"
-          >
+          <Group gap="xs" wrap="wrap" role="group" aria-label="Punctuality by date">
             {sortedRecords.map((record) => (
-              <Tooltip
-                key={record.date}
-                label={getTooltipContent(record)}
-                withArrow
-              >
+              <Tooltip key={record.date} label={getTooltipContent(record)} withArrow>
                 <div
                   role="img"
                   aria-label={getTooltipContent(record)}

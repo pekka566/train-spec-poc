@@ -79,14 +79,12 @@ describe("LiveView", () => {
     render(<LiveView />);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("heading", { name: "Live Status" }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Live Status" })).toBeInTheDocument();
     });
     expect(
       screen.getByRole("radiogroup", {
         name: "Switch between history and live views",
-      }),
+      })
     ).toBeInTheDocument();
     expect(screen.getByText("History")).toBeInTheDocument();
   });
@@ -117,12 +115,8 @@ describe("LiveView", () => {
     render(<LiveView />);
 
     await waitFor(() => {
-      expect(
-        screen.getByLabelText("Minutes before current time"),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByLabelText("Minutes after current time"),
-      ).toBeInTheDocument();
+      expect(screen.getByLabelText("Minutes before current time")).toBeInTheDocument();
+      expect(screen.getByLabelText("Minutes after current time")).toBeInTheDocument();
     });
 
     expect(mockUseLiveTrainData).toHaveBeenCalledWith(
@@ -130,7 +124,7 @@ describe("LiveView", () => {
       [1719],
       true,
       30,
-      120,
+      120
     );
   });
 
@@ -138,13 +132,9 @@ describe("LiveView", () => {
     render(<LiveView />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/Current date and time:/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Current date and time:/)).toBeInTheDocument();
       expect(screen.getByText(/Search window:/)).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /Search/ }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Search/ })).toBeInTheDocument();
     });
   });
 });

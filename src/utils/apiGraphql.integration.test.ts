@@ -26,7 +26,7 @@ type MockRow = {
 const mockTrain = (
   trainNumber: number,
   trainTypeName: string,
-  timeTableRows: MockRow[],
+  timeTableRows: MockRow[]
 ) => ({ trainNumber, trainType: { name: trainTypeName }, timeTableRows });
 
 describe("apiGraphql integration", () => {
@@ -56,9 +56,7 @@ describe("apiGraphql integration", () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBe(4); // 1719, 1721, 9700, 9702
 
-      const byNumber = Object.fromEntries(
-        result.map((r) => [r.trainNumber, r]),
-      );
+      const byNumber = Object.fromEntries(result.map((r) => [r.trainNumber, r]));
       const train1719 = byNumber[1719];
       const train9700 = byNumber[9700];
 
@@ -77,14 +75,10 @@ describe("apiGraphql integration", () => {
         expect(item).toHaveProperty("stationName", expect.any(String));
         expect(item).toHaveProperty("scheduledDeparture", expect.any(String));
         expect(item).toHaveProperty("direction", expect.any(String));
-        expect(item.scheduledDeparture).toMatch(
-          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/,
-        );
-        expect(["Lempäälä → Tampere", "Tampere → Lempäälä"]).toContain(
-          item.direction,
-        );
+        expect(item.scheduledDeparture).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+        expect(["Lempäälä → Tampere", "Tampere → Lempäälä"]).toContain(item.direction);
       }
-    },
+    }
   );
 
   it("filters out trains whose trainType.name is not in ALLOWED_TRAIN_TYPES", async () => {
@@ -122,7 +116,7 @@ describe("apiGraphql integration", () => {
             ],
           },
         });
-      }),
+      })
     );
     const result = await fetchRouteTodayGraphQL("2026-01-29");
     expect(result).toHaveLength(1);
@@ -164,7 +158,7 @@ describe("apiGraphql integration", () => {
             ],
           },
         });
-      }),
+      })
     );
     const result = await fetchRouteTodayGraphQL("2026-01-29");
     expect(result).toHaveLength(1);
@@ -179,9 +173,7 @@ describe("apiGraphql integration", () => {
     expect(stored).not.toBeNull();
     expect(stored!.trains.length).toBeGreaterThanOrEqual(2);
     expect(stored!.date).toBeDefined();
-    const byNumber = Object.fromEntries(
-      stored!.trains.map((r) => [r.trainNumber, r]),
-    );
+    const byNumber = Object.fromEntries(stored!.trains.map((r) => [r.trainNumber, r]));
     expect(byNumber[1719]).toBeDefined();
     expect(byNumber[9700]).toBeDefined();
   });
@@ -193,10 +185,10 @@ describe("apiGraphql integration", () => {
           status: 500,
           statusText: "Internal Server Error",
         });
-      }),
+      })
     );
     await expect(fetchRouteTodayGraphQL("2026-01-29")).rejects.toThrow(
-      "GraphQL error: 500 Internal Server Error",
+      "GraphQL error: 500 Internal Server Error"
     );
   });
 
@@ -206,11 +198,9 @@ describe("apiGraphql integration", () => {
         return HttpResponse.json({
           errors: [{ message: "Server error" }],
         });
-      }),
+      })
     );
-    await expect(fetchRouteTodayGraphQL("2026-01-29")).rejects.toThrow(
-      "Server error",
-    );
+    await expect(fetchRouteTodayGraphQL("2026-01-29")).rejects.toThrow("Server error");
   });
 
   it("excludes train with no departure at Lempäälä or Tampere (getDepartureAndDirection returns null)", async () => {
@@ -248,7 +238,7 @@ describe("apiGraphql integration", () => {
             ],
           },
         });
-      }),
+      })
     );
     const result = await fetchRouteTodayGraphQL("2026-01-29");
     expect(result).toHaveLength(1);
@@ -271,7 +261,7 @@ describe("apiGraphql integration", () => {
       expect(getRouteTodayFromStorage("2026-01-27")).toBeNull();
       localStorage.setItem(
         "train:route:today:2026-01-27",
-        JSON.stringify({ date: "2026-01-27" }),
+        JSON.stringify({ date: "2026-01-27" })
       );
       expect(getRouteTodayFromStorage("2026-01-27")).toBeNull();
     });
@@ -288,10 +278,7 @@ describe("apiGraphql integration", () => {
           },
         ],
       };
-      localStorage.setItem(
-        "train:route:today:2026-01-27",
-        JSON.stringify(payload),
-      );
+      localStorage.setItem("train:route:today:2026-01-27", JSON.stringify(payload));
       expect(getRouteTodayFromStorage("2026-01-27")).toEqual(payload);
     });
   });
@@ -346,8 +333,7 @@ describe("apiGraphql integration", () => {
           direction: "Lempäälä → Tampere" as const,
         },
       ];
-      const { outbound, return: returnTrains } =
-        getRouteTrainsByDirection(trains);
+      const { outbound, return: returnTrains } = getRouteTrainsByDirection(trains);
       expect(outbound).toHaveLength(1);
       expect(outbound[0]!.trainNumber).toBe(1719);
       expect(returnTrains).toHaveLength(1);
@@ -371,15 +357,9 @@ describe("apiGraphql integration", () => {
           direction: "Tampere → Lempäälä" as const,
         },
       ];
-      const filtered = filterReturnOptions(
-        returnTrains,
-        "2026-01-29T08:20:00Z",
-      );
+      const filtered = filterReturnOptions(returnTrains, "2026-01-29T08:20:00Z");
       expect(filtered).toHaveLength(2);
-      const filteredAfter = filterReturnOptions(
-        returnTrains,
-        "2026-01-29T15:00:00Z",
-      );
+      const filteredAfter = filterReturnOptions(returnTrains, "2026-01-29T15:00:00Z");
       expect(filteredAfter).toHaveLength(1);
       expect(filteredAfter[0]!.trainNumber).toBe(9701);
     });
@@ -417,11 +397,9 @@ describe("apiGraphql integration", () => {
       server.use(
         http.post("https://rata.digitraffic.fi/api/v2/graphql/graphql", () => {
           return passthrough();
-        }),
+        })
       );
-      let result:
-        | Awaited<ReturnType<typeof fetchRouteTodayGraphQL>>
-        | undefined;
+      let result: Awaited<ReturnType<typeof fetchRouteTodayGraphQL>> | undefined;
       try {
         result = await fetchRouteTodayGraphQL("2026-01-29");
       } catch (err) {
@@ -441,6 +419,6 @@ describe("apiGraphql integration", () => {
         expect(item).toHaveProperty("scheduledDeparture", expect.any(String));
         expect(item).toHaveProperty("direction", expect.any(String));
       }
-    },
+    }
   );
 });

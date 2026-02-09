@@ -1,12 +1,4 @@
-import {
-  Card,
-  Text,
-  Group,
-  Badge,
-  Stack,
-  SimpleGrid,
-  Box,
-} from "@mantine/core";
+import { Card, Text, Group, Badge, Stack, SimpleGrid, Box } from "@mantine/core";
 import { IconTrain } from "@tabler/icons-react";
 import type { LiveTrainInfo } from "@/types/live";
 import type { TrainStatus } from "@/types/train";
@@ -49,7 +41,7 @@ interface TrainCardProps {
 function formatBestTime(
   scheduled: string,
   estimated: string | null,
-  actual: string | null,
+  actual: string | null
 ): string {
   if (actual) return formatFinnishTime(actual);
   if (estimated) return formatFinnishTime(estimated);
@@ -76,7 +68,9 @@ export function TrainCard({ train, label, variant }: TrainCardProps) {
         borderLeftColor: STATUS_BORDER_COLORS[train.status],
         opacity: isPast ? 0.75 : 1,
       }}
-      aria-label={label ? `${label}: Train ${train.trainNumber}` : `Train ${train.trainNumber}`}
+      aria-label={
+        label ? `${label}: Train ${train.trainNumber}` : `Train ${train.trainNumber}`
+      }
     >
       <Stack gap="sm">
         {/* Header row: label + train info + status badge */}
@@ -112,11 +106,7 @@ export function TrainCard({ train, label, variant }: TrainCardProps) {
                 }}
               />
             )}
-            <Badge
-              color={STATUS_COLORS[train.status]}
-              variant="light"
-              size="lg"
-            >
+            <Badge color={STATUS_COLORS[train.status]} variant="light" size="lg">
               {STATUS_LABELS[train.status]}
             </Badge>
           </Group>
@@ -131,7 +121,7 @@ export function TrainCard({ train, label, variant }: TrainCardProps) {
             bestTime={formatBestTime(
               train.departure.scheduledTime,
               train.departure.estimatedTime,
-              train.departure.actualTime,
+              train.departure.actualTime
             )}
             isActual={!!train.departure.actualTime}
             delayMinutes={train.departure.delayMinutes}
@@ -145,7 +135,7 @@ export function TrainCard({ train, label, variant }: TrainCardProps) {
             bestTime={formatBestTime(
               train.arrival.scheduledTime,
               train.arrival.estimatedTime,
-              train.arrival.actualTime,
+              train.arrival.actualTime
             )}
             isActual={!!train.arrival.actualTime}
             delayMinutes={train.arrival.delayMinutes}
@@ -212,14 +202,8 @@ function TimeBlock({
           </Text>
         )}
       </Group>
-      <Text
-        size="sm"
-        fw={500}
-        style={{ color: DELAY_TEXT_COLORS[status] }}
-      >
-        {hasDelay || cancelled
-          ? getDelayText(delayMinutes, cancelled)
-          : "On schedule"}
+      <Text size="sm" fw={500} style={{ color: DELAY_TEXT_COLORS[status] }}>
+        {hasDelay || cancelled ? getDelayText(delayMinutes, cancelled) : "On schedule"}
       </Text>
     </Box>
   );

@@ -69,8 +69,12 @@ const TIME_TABLE_ROWS_WHERE = `where: { or: [{ station: { name: { equals: "${STA
 function getDepartureAndDirection(
   rows: GraphQLTimeTableRow[]
 ): { stationName: string; scheduledDeparture: string; direction: RouteDirection } | null {
-  const depL = rows.find((r) => r.type === "DEPARTURE" && r.station?.name === STATION_LEMPÄÄLÄ);
-  const depT = rows.find((r) => r.type === "DEPARTURE" && r.station?.name === STATION_TAMPERE);
+  const depL = rows.find(
+    (r) => r.type === "DEPARTURE" && r.station?.name === STATION_LEMPÄÄLÄ
+  );
+  const depT = rows.find(
+    (r) => r.type === "DEPARTURE" && r.station?.name === STATION_TAMPERE
+  );
 
   if (depL && depT) {
     const earlier = depL.scheduledTime <= depT.scheduledTime ? depL : depT;
@@ -121,9 +125,7 @@ export function buildRouteQuery(date: string): string {
  * Returns only trains that stop at Lempäälä (trainStopping === true at Lempäälä). Direction is derived from which departure (Lempäälä or Tampere) is earlier.
  * Use a weekday date to get weekday-only trains (app shows only weekday trains).
  */
-export async function fetchRouteTodayGraphQL(
-  date?: string
-): Promise<RouteTrainInfo[]> {
+export async function fetchRouteTodayGraphQL(date?: string): Promise<RouteTrainInfo[]> {
   const queryDate = date ?? getReferenceWeekdayDate();
   const query = buildRouteQuery(queryDate);
 
@@ -224,20 +226,14 @@ const RETURN_DIRECTION: RouteDirection = "Tampere → Lempäälä";
  * Split route trains by direction and sort by scheduledDeparture (ascending).
  * Outbound = Lempäälä → Tampere, return = Tampere → Lempäälä.
  */
-export function getRouteTrainsByDirection(
-  trains: RouteTrainInfo[]
-): {
+export function getRouteTrainsByDirection(trains: RouteTrainInfo[]): {
   outbound: RouteTrainInfo[];
   return: RouteTrainInfo[];
 } {
   const byDep = (a: RouteTrainInfo, b: RouteTrainInfo) =>
     a.scheduledDeparture.localeCompare(b.scheduledDeparture);
-  const outbound = trains
-    .filter((t) => t.direction === OUTBOUND_DIRECTION)
-    .sort(byDep);
-  const returnTrains = trains
-    .filter((t) => t.direction === RETURN_DIRECTION)
-    .sort(byDep);
+  const outbound = trains.filter((t) => t.direction === OUTBOUND_DIRECTION).sort(byDep);
+  const returnTrains = trains.filter((t) => t.direction === RETURN_DIRECTION).sort(byDep);
   return { outbound, return: returnTrains };
 }
 
@@ -248,9 +244,7 @@ export function filterReturnOptions(
   returnTrains: RouteTrainInfo[],
   selectedOutboundDeparture: string
 ): RouteTrainInfo[] {
-  return returnTrains.filter(
-    (t) => t.scheduledDeparture > selectedOutboundDeparture
-  );
+  return returnTrains.filter((t) => t.scheduledDeparture > selectedOutboundDeparture);
 }
 
 /**

@@ -23,9 +23,7 @@ test.describe("Accessibility", () => {
     // Wait for the loading spinner to appear
     await expect(page.getByText("Loading train routes...")).toBeVisible();
 
-    const results = await new AxeBuilder({ page })
-      .withTags(AXE_TAGS)
-      .analyze();
+    const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
 
     expect(results.violations).toEqual([]);
   });
@@ -36,14 +34,10 @@ test.describe("Accessibility", () => {
 
     // Wait for route fetch to complete - initial prompt visible
     await expect(
-      page.getByText(
-        'Select a date range and click "Fetch Data" to load train data.'
-      )
+      page.getByText('Select a date range and click "Fetch Data" to load train data.')
     ).toBeVisible();
 
-    const results = await new AxeBuilder({ page })
-      .withTags(AXE_TAGS)
-      .analyze();
+    const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
 
     expect(results.violations).toEqual([]);
   });
@@ -56,9 +50,7 @@ test.describe("Accessibility", () => {
 
     // Wait for route fetch
     await expect(
-      page.getByText(
-        'Select a date range and click "Fetch Data" to load train data.'
-      )
+      page.getByText('Select a date range and click "Fetch Data" to load train data.')
     ).toBeVisible();
 
     // Set dates and fetch data
@@ -79,9 +71,7 @@ test.describe("Accessibility", () => {
       timeout: 10000,
     });
 
-    const results = await new AxeBuilder({ page })
-      .withTags(AXE_TAGS)
-      .analyze();
+    const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
 
     expect(results.violations).toEqual([]);
   });
@@ -93,9 +83,7 @@ test.describe("Accessibility", () => {
     await page.goto("/");
 
     await expect(
-      page.getByText(
-        'Select a date range and click "Fetch Data" to load train data.'
-      )
+      page.getByText('Select a date range and click "Fetch Data" to load train data.')
     ).toBeVisible();
 
     // Set dates and fetch
@@ -120,9 +108,7 @@ test.describe("Accessibility", () => {
       page.getByRole("columnheader", { name: "Scheduled" }).first()
     ).toBeVisible();
 
-    const results = await new AxeBuilder({ page })
-      .withTags(AXE_TAGS)
-      .analyze();
+    const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
 
     expect(results.violations).toEqual([]);
   });
@@ -132,13 +118,9 @@ test.describe("Accessibility", () => {
     await page.goto("/");
 
     // Wait for error alert
-    await expect(
-      page.getByText("Failed to load train routes")
-    ).toBeVisible();
+    await expect(page.getByText("Failed to load train routes")).toBeVisible();
 
-    const results = await new AxeBuilder({ page })
-      .withTags(AXE_TAGS)
-      .analyze();
+    const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
 
     expect(results.violations).toEqual([]);
   });

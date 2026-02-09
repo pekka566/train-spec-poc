@@ -28,10 +28,7 @@ import {
   filterReturnOptions,
   type RouteTrainInfo,
 } from "@/utils/apiGraphql";
-import {
-  getDefaultDateRange,
-  formatFinnishTime,
-} from "@/utils/dateUtils";
+import { getDefaultDateRange, formatFinnishTime } from "@/utils/dateUtils";
 import { computeSummary, filterByTrain } from "@/utils/statsCalculator";
 import { getTrainTitle } from "@/utils/trainUtils";
 import { TRAINS, type TrainConfig } from "@/types/train";
@@ -40,8 +37,14 @@ import { STATION_CODES } from "@/constants/stations";
 
 function routeTrainToTrainConfig(route: RouteTrainInfo): TrainConfig {
   const time = formatFinnishTime(route.scheduledDeparture);
-  const from = route.direction === "Lempäälä → Tampere" ? STATION_CODES.LEMPÄÄLÄ : STATION_CODES.TAMPERE;
-  const to = route.direction === "Lempäälä → Tampere" ? STATION_CODES.TAMPERE : STATION_CODES.LEMPÄÄLÄ;
+  const from =
+    route.direction === "Lempäälä → Tampere"
+      ? STATION_CODES.LEMPÄÄLÄ
+      : STATION_CODES.TAMPERE;
+  const to =
+    route.direction === "Lempäälä → Tampere"
+      ? STATION_CODES.TAMPERE
+      : STATION_CODES.LEMPÄÄLÄ;
   return {
     number: route.trainNumber,
     name: `${time} (${route.trainNumber})`,
@@ -66,18 +69,15 @@ function App() {
   const routeStorage = useMemo(
     () => getRouteWeekdayFromStorage(),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- re-read storage when route fetch completes
-    [routeStorageRevision],
+    [routeStorageRevision]
   );
   const { outbound: outboundList, return: returnList } = useMemo(() => {
     if (!routeStorage?.trains?.length) return { outbound: [], return: [] };
     return getRouteTrainsByDirection(routeStorage.trains);
   }, [routeStorage]);
 
-  const [selectedOutbound, setSelectedOutbound] =
-    useState<RouteTrainInfo | null>(null);
-  const [selectedReturn, setSelectedReturn] = useState<RouteTrainInfo | null>(
-    null,
-  );
+  const [selectedOutbound, setSelectedOutbound] = useState<RouteTrainInfo | null>(null);
+  const [selectedReturn, setSelectedReturn] = useState<RouteTrainInfo | null>(null);
 
   const doRouteFetch = useCallback(() => {
     setIsRouteLoading(true);
@@ -85,9 +85,7 @@ function App() {
     runRouteFetchOnce()
       .then(() => setRouteStorageRevision((r) => r + 1))
       .catch((err) => {
-        setRouteError(
-          err instanceof Error ? err : new Error(String(err)),
-        );
+        setRouteError(err instanceof Error ? err : new Error(String(err)));
       })
       .finally(() => setIsRouteLoading(false));
   }, []);
@@ -103,7 +101,7 @@ function App() {
       setSelectedOutbound(
         outboundList.find((t) => t.trainNumber === TRAINS.morning.number) ??
           outboundList[0] ??
-          null,
+          null
       );
     }
   }, [outboundList, selectedOutbound]);
@@ -124,7 +122,7 @@ function App() {
         setSelectedReturn(
           returnOptions.find((t) => t.trainNumber === TRAINS.evening.number) ??
             returnOptions[0] ??
-            null,
+            null
         );
       }
     }
@@ -136,26 +134,14 @@ function App() {
   ];
 
   const morningTrainConfig: TrainConfig =
-    selectedOutbound != null
-      ? routeTrainToTrainConfig(selectedOutbound)
-      : TRAINS.morning;
+    selectedOutbound != null ? routeTrainToTrainConfig(selectedOutbound) : TRAINS.morning;
   const eveningTrainConfig: TrainConfig =
-    selectedReturn != null
-      ? routeTrainToTrainConfig(selectedReturn)
-      : TRAINS.evening;
+    selectedReturn != null ? routeTrainToTrainConfig(selectedReturn) : TRAINS.evening;
 
-  const {
-    data,
-    isLoading,
-    error,
-    tooManyApiCalls,
-    neededApiCalls,
-    fetch,
-    hasFetched,
-  } = useTrainData(startDate, endDate, trainNumbers);
+  const { data, isLoading, error, tooManyApiCalls, neededApiCalls, fetch, hasFetched } =
+    useTrainData(startDate, endDate, trainNumbers);
 
-  const contentVisible =
-    !error && !(tooManyApiCalls && hasFetched) && !isLoading;
+  const contentVisible = !error && !(tooManyApiCalls && hasFetched) && !isLoading;
   const prevContentVisibleRef = useRef(contentVisible);
   useEffect(() => {
     if (contentVisible && !prevContentVisibleRef.current) {
@@ -215,11 +201,7 @@ function App() {
     // Show error state
     if (error) {
       return (
-        <Alert
-          icon={<IconAlertCircle size={16} aria-hidden />}
-          title="Error"
-          color="red"
-        >
+        <Alert icon={<IconAlertCircle size={16} aria-hidden />} title="Error" color="red">
           {error.message}
           <Box mt="sm">
             <Button variant="outline" size="sm" onClick={fetch}>
@@ -304,11 +286,7 @@ function App() {
                 variant="morning"
                 hideTitle
               />
-              <Timeline
-                train={morningTrainConfig}
-                records={morningRecords}
-                hideTitle
-              />
+              <Timeline train={morningTrainConfig} records={morningRecords} hideTitle />
             </Stack>
             <Stack gap="lg">
               <Title order={2} size="h4" fw={600}>
@@ -320,11 +298,7 @@ function App() {
                 variant="evening"
                 hideTitle
               />
-              <Timeline
-                train={eveningTrainConfig}
-                records={eveningRecords}
-                hideTitle
-              />
+              <Timeline train={eveningTrainConfig} records={eveningRecords} hideTitle />
             </Stack>
           </SimpleGrid>
         );
@@ -386,12 +360,7 @@ function App() {
         </Center>
 
         {/* Main: date picker, tabs, content */}
-        <Box
-          component="main"
-          id="main-content"
-          ref={mainContentRef}
-          tabIndex={-1}
-        >
+        <Box component="main" id="main-content" ref={mainContentRef} tabIndex={-1}>
           <Stack gap="lg">
             <DateRangePicker
               startDate={startDate}

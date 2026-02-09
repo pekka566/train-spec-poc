@@ -13,16 +13,16 @@ The application is a client-only React SPA that tracks punctuality of two commut
 
 ## Tech stack
 
-| Technology | Purpose |
-| ---------- | ------- |
-| **Vite** | Build tool and dev server |
-| **React 19** | UI framework |
-| **TypeScript** | Typing and tooling |
-| **Mantine** | UI components and theming. Use at least `@mantine/core` and `@mantine/dates` (for date inputs). Implement visual spec with Mantine components and theme. |
-| **TanStack Query (React Query) 5** | Server state, caching, and data fetching for Digitraffic API |
-| **dayjs** | Date/time manipulation with UTC and timezone plugins (`Europe/Helsinki`) |
-| **@tabler/icons-react** | Icons (search, chart, table, alert, inbox) |
-| **@mantine/dates** | Date input components |
+| Technology                         | Purpose                                                                                                                                                  |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Vite**                           | Build tool and dev server                                                                                                                                |
+| **React 19**                       | UI framework                                                                                                                                             |
+| **TypeScript**                     | Typing and tooling                                                                                                                                       |
+| **Mantine**                        | UI components and theming. Use at least `@mantine/core` and `@mantine/dates` (for date inputs). Implement visual spec with Mantine components and theme. |
+| **TanStack Query (React Query) 5** | Server state, caching, and data fetching for Digitraffic API                                                                                             |
+| **dayjs**                          | Date/time manipulation with UTC and timezone plugins (`Europe/Helsinki`)                                                                                 |
+| **@tabler/icons-react**            | Icons (search, chart, table, alert, inbox)                                                                                                               |
+| **@mantine/dates**                 | Date input components                                                                                                                                    |
 
 - No backend; the app runs entirely in the browser and calls Digitraffic directly.
 - Styling and layout follow the visual spec (colors, cards, table, timeline) using Mantine's component library and theme (e.g. Mantine colors for green/yellow/red/gray status and lime/cyan backgrounds for train cards).
@@ -59,7 +59,7 @@ Use a stable query key per train per date so cache is deduplicated and reusable:
 
 ```typescript
 const trainQueryKey = (date: string, trainNumber: number) =>
-  ['train', date, trainNumber] as const;
+  ["train", date, trainNumber] as const;
 ```
 
 - **Example:** `['train', '2026-01-27', 1719]` for the morning train on that date.
@@ -120,7 +120,7 @@ const trainQueryKey = (date: string, trainNumber: number) =>
 ```typescript
 interface TrainResponse {
   trainNumber: number;
-  departureDate: string;        // "YYYY-MM-DD"
+  departureDate: string; // "YYYY-MM-DD"
   trainType: string;
   operatorShortCode: string;
   runningCurrently: boolean;
@@ -131,7 +131,7 @@ interface TrainResponse {
 interface TimeTableRow {
   stationShortCode: string;
   type: "DEPARTURE" | "ARRIVAL";
-  scheduledTime: string;        // ISO 8601 UTC
+  scheduledTime: string; // ISO 8601 UTC
   actualTime?: string;
   differenceInMinutes?: number; // positive = late
   commercialStop: boolean;
@@ -155,7 +155,7 @@ curl 'https://rata.digitraffic.fi/api/v1/trains/2026-01-30/9700' --compressed
 ### Client
 
 - **Single function** in `src/utils/api.ts`:  
-  `fetchTrain(date: string, trainNumber: number): Promise<TrainResponse | null>`  
+  `fetchTrain(date: string, trainNumber: number): Promise<TrainResponse | null>`
   - Calls `GET https://rata.digitraffic.fi/api/v1/trains/{date}/{trainNumber}`.
   - Returns the first element of the JSON array (one train per response), or `null` if the response is empty or the train is missing.
   - Throws on network errors or non-OK HTTP status so TanStack Query can treat them as errors and optionally retry.
@@ -242,11 +242,11 @@ src/
 - **`src/types/train.ts`**: `TrainRecord`, `TrainResponse`, `TimeTableRow`, status type, and `TRAINS` config. The `TrainRecord` interface must match the functional spec exactly:
   ```typescript
   interface TrainRecord {
-    date: string;                 // "YYYY-MM-DD"
+    date: string; // "YYYY-MM-DD"
     trainNumber: number;
     trainType: string;
     cancelled: boolean;
-    scheduledDeparture: string;   // ISO timestamp
+    scheduledDeparture: string; // ISO timestamp
     actualDeparture: string | null;
     scheduledArrival: string;
     actualArrival: string | null;

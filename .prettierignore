@@ -1,0 +1,19 @@
+# Dependencies and build
+node_modules
+dist
+coverage
+*.min.js
+
+# Lock and generated
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+public/mockServiceWorker.js
+
+# E2E / Playwright
+test-results
+playwright-report
+.blob
+
+# Misc
+.DS_Store

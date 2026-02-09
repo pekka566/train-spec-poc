@@ -1,12 +1,4 @@
-import {
-  Card,
-  Text,
-  Title,
-  Stack,
-  Progress,
-  SimpleGrid,
-  Box,
-} from "@mantine/core";
+import { Card, Text, Title, Stack, Progress, SimpleGrid, Box } from "@mantine/core";
 import type { TrainSummary, TrainConfig } from "@/types/train";
 import { getTrainTitle } from "@/utils/trainUtils";
 import { STATUS_LEGEND_ITEMS } from "@/constants/statusLegend";
@@ -47,14 +39,8 @@ export function SummaryCard({
         )}
 
         <SimpleGrid cols={2} spacing="sm">
-          <StatBox
-            label="On Time"
-            value={`${Math.round(summary.onTimePercent)}%`}
-          />
-          <StatBox
-            label="Avg Delay (min)"
-            value={summary.averageDelay.toFixed(1)}
-          />
+          <StatBox label="On Time" value={`${Math.round(summary.onTimePercent)}%`} />
+          <StatBox label="Avg Delay (min)" value={summary.averageDelay.toFixed(1)} />
           <StatBox
             label="On Time"
             value={`${summary.onTimeCount} / ${summary.totalCount}`}

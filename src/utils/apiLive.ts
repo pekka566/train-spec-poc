@@ -16,7 +16,7 @@ const API_BASE = "https://rata.digitraffic.fi/api/v1";
 export async function fetchLiveStationTrains(
   stationCode: string,
   minutesBefore: number = 120,
-  minutesAfter: number = 360,
+  minutesAfter: number = 360
 ): Promise<LiveTrainResponse[]> {
   const url =
     `${API_BASE}/live-trains/station/${encodeURIComponent(stationCode)}` +
@@ -28,9 +28,7 @@ export async function fetchLiveStationTrains(
 
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(
-      `Live API error: ${response.status} ${response.statusText}`,
-    );
+    throw new Error(`Live API error: ${response.status} ${response.statusText}`);
   }
 
   const data: unknown = await response.json();
@@ -55,7 +53,7 @@ function getStationCodes(direction: TravelDirection): {
 export function parseLiveTrains(
   trains: LiveTrainResponse[],
   direction: TravelDirection,
-  routeTrainNumbers: Set<number>,
+  routeTrainNumbers: Set<number>
 ): LiveTrainInfo[] {
   const { from, to } = getStationCodes(direction);
   const result: LiveTrainInfo[] = [];
@@ -64,10 +62,10 @@ export function parseLiveTrains(
     if (!routeTrainNumbers.has(train.trainNumber)) continue;
 
     const depRow = train.timeTableRows.find(
-      (r) => r.type === "DEPARTURE" && r.stationShortCode === from,
+      (r) => r.type === "DEPARTURE" && r.stationShortCode === from
     );
     const arrRow = train.timeTableRows.find(
-      (r) => r.type === "ARRIVAL" && r.stationShortCode === to,
+      (r) => r.type === "ARRIVAL" && r.stationShortCode === to
     );
 
     if (!depRow || !arrRow) continue;
@@ -78,9 +76,7 @@ export function parseLiveTrains(
     const status = getTrainStatus(cancelled, depDelay);
     const phase = depRow.actualTime ? "departed" : "upcoming";
     const track =
-      depRow.commercialTrack?.trim() !== ""
-        ? depRow.commercialTrack
-        : undefined;
+      depRow.commercialTrack?.trim() !== "" ? depRow.commercialTrack : undefined;
 
     result.push({
       trainNumber: train.trainNumber,
@@ -108,7 +104,7 @@ export function parseLiveTrains(
   }
 
   result.sort((a, b) =>
-    a.departure.scheduledTime.localeCompare(b.departure.scheduledTime),
+    a.departure.scheduledTime.localeCompare(b.departure.scheduledTime)
   );
 
   return result;
@@ -119,7 +115,7 @@ export function parseLiveTrains(
  */
 export function selectVisibleTrains(
   trains: LiveTrainInfo[],
-  nowIso: string,
+  nowIso: string
 ): VisibleTrains {
   const departed: LiveTrainInfo[] = [];
   const upcoming: LiveTrainInfo[] = [];

@@ -7,14 +7,9 @@ function AllThemesProvider({ children }: { children: React.ReactNode }) {
   return <MantineProvider>{children}</MantineProvider>;
 }
 
-function customRender(
-  ui: ReactElement,
-  options?: Omit<RenderOptions, "wrapper">
-) {
+function customRender(ui: ReactElement, options?: Omit<RenderOptions, "wrapper">) {
   return render(ui, {
-    wrapper: ({ children }) => (
-      <AllThemesProvider>{children}</AllThemesProvider>
-    ),
+    wrapper: ({ children }) => <AllThemesProvider>{children}</AllThemesProvider>,
     ...options,
   });
 }

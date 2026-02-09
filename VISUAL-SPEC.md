@@ -17,6 +17,7 @@ This document defines the **visual design** of the application: layout, componen
 ### Overall Layout Structure
 
 **Train selection (two dropdowns):**
+
 - **Outbound train:** Label "Outbound train"; options shown as **hh:mm (train number)** (e.g. 08:20 (1719)). Options from route data: only trains that **stop at Lempäälä**, direction Lempäälä → Tampere, sorted by departure time.
 - **Return train:** Label "Return train"; same format hh:mm (train number). Options from route data: only trains that **stop at Lempäälä**, direction Tampere → Lempäälä; **list is filtered** so only trains with departure time **after** the selected outbound are shown.
 - **Placement:** Same row as Start date, End date, and Fetch Data, or on a second row below. Order: Start date, End date, Outbound train, Return train, Fetch Data.
@@ -352,14 +353,14 @@ When route data is not available (e.g. first visit or route fetch has not run), 
 
 Use these theme tokens consistently for status and train cards:
 
-| Use | Mantine token |
-| --- | -------------- |
-| On time (≤1 min) | `green.5` |
-| Slight delay (2–5 min) | `yellow.5` |
-| Delayed (>5 min) | `red.5` |
-| Cancelled | `gray.6` |
+| Use                     | Mantine token                    |
+| ----------------------- | -------------------------------- |
+| On time (≤1 min)        | `green.5`                        |
+| Slight delay (2–5 min)  | `yellow.5`                       |
+| Delayed (>5 min)        | `red.5`                          |
+| Cancelled               | `gray.6`                         |
 | Outbound (morning) card | Light lime background (`lime.0`) |
-| Return (evening) card | Light cyan background (`cyan.0`) |
+| Return (evening) card   | Light cyan background (`cyan.0`) |
 
 **Implementation (CSS variables):** Mantine exposes colors as CSS variables with a **hyphen** between color name and shade. In code, use `var(--mantine-color-{name}-{shade})`, e.g. `var(--mantine-color-green-5)`, `var(--mantine-color-yellow-5)`, `var(--mantine-color-red-5)`, `var(--mantine-color-gray-6)`. Using a dot (e.g. `green.5`) in the variable name will not resolve and cells will render without background color.
 

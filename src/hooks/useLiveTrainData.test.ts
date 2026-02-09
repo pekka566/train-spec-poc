@@ -31,11 +31,10 @@ describe("useLiveTrainData", () => {
 
   it("returns previous and next trains when refetch is called and API succeeds", async () => {
     const { result } = renderHook(
-      () =>
-        useLiveTrainData("to-tampere", [1719, 1721, 1723], true),
+      () => useLiveTrainData("to-tampere", [1719, 1721, 1723], true),
       {
         wrapper: createWrapper(),
-      },
+      }
     );
 
     result.current.refetch();
@@ -43,30 +42,25 @@ describe("useLiveTrainData", () => {
     await waitFor(
       () => {
         expect(result.current.isLoading).toBe(false);
-        expect(
-          result.current.previous.length > 0 || result.current.next.length > 0,
-        ).toBe(true);
+        expect(result.current.previous.length > 0 || result.current.next.length > 0).toBe(
+          true
+        );
       },
-      { timeout: 5000 },
+      { timeout: 5000 }
     );
 
     expect(result.current.error).toBeNull();
     expect(Array.isArray(result.current.previous)).toBe(true);
     expect(Array.isArray(result.current.next)).toBe(true);
     expect(
-      result.current.lastUpdated === null ||
-        result.current.lastUpdated instanceof Date,
+      result.current.lastUpdated === null || result.current.lastUpdated instanceof Date
     ).toBe(true);
   }, 8000);
 
   it("does not fetch automatically (only on refetch)", async () => {
-    const { result } = renderHook(
-      () =>
-        useLiveTrainData("to-tampere", [1719], true),
-      {
-        wrapper: createWrapper(),
-      },
-    );
+    const { result } = renderHook(() => useLiveTrainData("to-tampere", [1719], true), {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -84,16 +78,12 @@ describe("useLiveTrainData", () => {
           status: 500,
           statusText: "Internal Server Error",
         });
-      }),
+      })
     );
 
-    const { result } = renderHook(
-      () =>
-        useLiveTrainData("to-tampere", [1719], true),
-      {
-        wrapper: createWrapper(),
-      },
-    );
+    const { result } = renderHook(() => useLiveTrainData("to-tampere", [1719], true), {
+      wrapper: createWrapper(),
+    });
 
     result.current.refetch();
 
@@ -101,7 +91,7 @@ describe("useLiveTrainData", () => {
       () => {
         expect(result.current.error).not.toBeNull();
       },
-      { timeout: 5000 },
+      { timeout: 5000 }
     );
 
     expect(result.current.previous).toEqual([]);
@@ -110,11 +100,10 @@ describe("useLiveTrainData", () => {
 
   it("uses LPÄ station code for to-tampere direction", async () => {
     const { result } = renderHook(
-      () =>
-        useLiveTrainData("to-tampere", [1719, 1721, 1723], true),
+      () => useLiveTrainData("to-tampere", [1719, 1721, 1723], true),
       {
         wrapper: createWrapper(),
-      },
+      }
     );
 
     result.current.refetch();
@@ -122,43 +111,35 @@ describe("useLiveTrainData", () => {
     await waitFor(
       () => {
         expect(result.current.isLoading).toBe(false);
-        const train =
-          result.current.previous[0] ?? result.current.next[0];
+        const train = result.current.previous[0] ?? result.current.next[0];
         expect(train?.departure.stationCode).toBe("LPÄ");
       },
-      { timeout: 5000 },
+      { timeout: 5000 }
     );
 
-    const train =
-      result.current.previous[0] ?? result.current.next[0];
+    const train = result.current.previous[0] ?? result.current.next[0];
     expect(train).toBeDefined();
     expect(train!.departure.stationCode).toBe("LPÄ");
     expect(train!.arrival.stationCode).toBe("TPE");
   }, 8000);
 
   it("uses TPE station code for to-lempäälä direction", async () => {
-    const { result } = renderHook(
-      () =>
-        useLiveTrainData("to-lempäälä", [9700], true),
-      {
-        wrapper: createWrapper(),
-      },
-    );
+    const { result } = renderHook(() => useLiveTrainData("to-lempäälä", [9700], true), {
+      wrapper: createWrapper(),
+    });
 
     result.current.refetch();
 
     await waitFor(
       () => {
         expect(result.current.isLoading).toBe(false);
-        const train =
-          result.current.previous[0] ?? result.current.next[0];
+        const train = result.current.previous[0] ?? result.current.next[0];
         expect(train?.departure.stationCode).toBe("TPE");
       },
-      { timeout: 5000 },
+      { timeout: 5000 }
     );
 
-    const train =
-      result.current.previous[0] ?? result.current.next[0];
+    const train = result.current.previous[0] ?? result.current.next[0];
     expect(train).toBeDefined();
     expect(train!.departure.stationCode).toBe("TPE");
     expect(train!.arrival.stationCode).toBe("LPÄ");
@@ -170,15 +151,14 @@ describe("useLiveTrainData", () => {
       http.get(LIVE_STATION_URL, ({ request }) => {
         capturedUrl = request.url;
         return HttpResponse.json(liveStationLPÄResponse);
-      }),
+      })
     );
 
     const { result } = renderHook(
-      () =>
-        useLiveTrainData("to-tampere", [1719, 1721, 1723], true, 90, 200),
+      () => useLiveTrainData("to-tampere", [1719, 1721, 1723], true, 90, 200),
       {
         wrapper: createWrapper(),
-      },
+      }
     );
 
     result.current.refetch();
@@ -188,7 +168,7 @@ describe("useLiveTrainData", () => {
         expect(result.current.isLoading).toBe(false);
         expect(capturedUrl).not.toBeNull();
       },
-      { timeout: 5000 },
+      { timeout: 5000 }
     );
 
     const url = new URL(capturedUrl!);

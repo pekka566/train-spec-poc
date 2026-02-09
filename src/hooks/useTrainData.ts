@@ -90,14 +90,9 @@ export function useTrainData(
 
             const response = await fetchTrain(date, trainNumber);
             if (response) {
-              const direction =
-                trainNumber === outboundNum ? OUTBOUND_DIR : RETURN_DIR;
+              const direction = trainNumber === outboundNum ? OUTBOUND_DIR : RETURN_DIR;
               const { from, to } = getStationCodesByDirection(direction);
-              const record = parseTrainResponseWithStations(
-                response,
-                from,
-                to
-              );
+              const record = parseTrainResponseWithStations(response, from, to);
               if (record) {
                 results.push(record);
                 setTrainInStorage(date, trainNumber, record);
@@ -120,8 +115,7 @@ export function useTrainData(
       );
       for (const cached of cachedData) {
         const exists = results.some(
-          (r) =>
-            r.date === cached.date && r.trainNumber === cached.trainNumber
+          (r) => r.date === cached.date && r.trainNumber === cached.trainNumber
         );
         if (!exists) {
           results.push(cached);
