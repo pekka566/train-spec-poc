@@ -3,7 +3,7 @@ import App from "./App";
 import { LiveView } from "./components/live/LiveView";
 
 function getViewFromHash(): "history" | "live" {
-  return window.location.hash === "#/live" ? "live" : "history";
+  return window.location.hash === "#/" ? "history" : "live";
 }
 
 export function AppRouter() {

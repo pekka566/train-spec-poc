@@ -37,13 +37,7 @@ export function useLiveTrainData(
 
   const { data, isLoading, error, dataUpdatedAt, isFetched, refetch } =
     useQuery({
-    queryKey: [
-      "liveTrains",
-      stationCode,
-      direction,
-      minutesBeforeDeparture,
-      minutesAfterDeparture,
-    ],
+    queryKey: ["liveTrains", stationCode, direction],
     queryFn: async () => {
       const raw = await fetchLiveStationTrains(
         stationCode,

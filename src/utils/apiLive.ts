@@ -20,15 +20,17 @@ export async function fetchLiveStationTrains(
 ): Promise<LiveTrainResponse[]> {
   const url =
     `${API_BASE}/live-trains/station/${encodeURIComponent(stationCode)}` +
-    `?minutes_before_departure=${minutesBefore}` +
-    `&minutes_after_departure=${minutesAfter}` +
+    `?minutes_before_departure=${minutesAfter}` +
+    `&minutes_after_departure=${minutesBefore}` +
     `&minutes_before_arrival=0` +
     `&minutes_after_arrival=0` +
     `&train_categories=Commuter,Long-distance`;
 
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Live API error: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Live API error: ${response.status} ${response.statusText}`,
+    );
   }
 
   const data: unknown = await response.json();
@@ -36,7 +38,10 @@ export async function fetchLiveStationTrains(
   return data as LiveTrainResponse[];
 }
 
-function getStationCodes(direction: TravelDirection): { from: string; to: string } {
+function getStationCodes(direction: TravelDirection): {
+  from: string;
+  to: string;
+} {
   if (direction === "to-tampere") {
     return { from: STATION_CODES.LEMPÄÄLÄ, to: STATION_CODES.TAMPERE };
   }

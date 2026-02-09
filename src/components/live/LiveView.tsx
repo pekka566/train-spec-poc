@@ -264,6 +264,23 @@ export function LiveView() {
                   </Center>
                 )}
 
+                {!isRouteLoading &&
+                  !routeError &&
+                  !isLoading &&
+                  !error &&
+                  !isFetched && (
+                  <Center
+                    py="xl"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                  >
+                    <Text c="dimmed">
+                      Click &quot;Search&quot; to load train data.
+                    </Text>
+                  </Center>
+                )}
+
                 {error && (
                   <Alert
                     icon={<IconAlertCircle size={16} aria-hidden />}
